@@ -1,0 +1,2281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JFK: November 1963</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #eceae4;
+    --bg-dark: #d8d4ca;
+    --text: #1a1a1a;
+    --text-light: #4a4a4a;
+    --accent: #8b0000;
+    --accent-light: #a81010;
+    --blue: #1a2a4a;
+    --gold: #b8960c;
+    --card-bg: #fafaf6;
+    --shadow: rgba(0, 0, 0, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.8;
+  }
+
+  /* ===== TITLE SCREEN ===== */
+  #title-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(180deg, #0a0a12 0%, #141428 40%, #1a1a2e 100%);
+    color: #eceae4;
+  }
+
+  #title-screen h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+  }
+
+  #title-screen .subtitle {
+    font-size: 1.3rem;
+    font-style: italic;
+    color: var(--gold);
+    margin-bottom: 2rem;
+  }
+
+  #title-screen .intro-text {
+    max-width: 650px;
+    font-size: 1rem;
+    line-height: 1.9;
+    color: #b8b4a8;
+    margin-bottom: 2.5rem;
+  }
+
+  #title-screen .intro-text em {
+    color: var(--gold);
+    font-style: italic;
+  }
+
+  .btn-start {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 1rem 3rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-start:hover { background: var(--accent-light); }
+
+  /* ===== MAP PANEL ===== */
+  #map-panel {
+    position: relative;
+    z-index: 100;
+    display: none;
+    background: #d0cdc4;
+    border-bottom: 3px solid var(--accent);
+    overflow: hidden;
+  }
+
+  #map-panel.active { display: block; }
+
+  .map-wrapper {
+    position: relative;
+    max-width: 1000px;
+    margin: 0 auto;
+    height: 420px;
+    overflow: hidden;
+    background: #c8cdd5;
+    transition: height 0.4s ease;
+  }
+
+  .map-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* City markers */
+  .city-dot-outer {
+    fill: none;
+    stroke: none;
+    transition: all 0.4s;
+  }
+
+  .city-dot-outer.visited {
+    fill: rgba(26, 42, 74, 0.15);
+    stroke: var(--blue);
+    stroke-width: 2;
+  }
+
+  .city-dot-outer.current {
+    fill: none;
+    stroke: #b71c1c;
+    stroke-width: 5;
+    filter: drop-shadow(0 0 12px rgba(183,28,28,0.9));
+  }
+
+  .city-dot-inner {
+    fill: transparent;
+    transition: all 0.4s;
+  }
+
+  .city-dot-outer.visited .city-dot-inner {
+    fill: var(--blue);
+  }
+
+  .city-dot-outer.current .city-dot-inner {
+    fill: #b71c1c;
+  }
+
+  .city-label {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 11px;
+    fill: #333;
+    font-weight: 600;
+    text-anchor: middle;
+    opacity: 0.5;
+    transition: opacity 0.4s;
+  }
+
+  .city-label.visited,
+  .city-label.current {
+    opacity: 1;
+    fill: #1a1a1a;
+  }
+
+  /* Danger markers */
+  .danger-icon {
+    opacity: 0;
+    transition: opacity 0.6s;
+  }
+
+  .danger-icon.visible { opacity: 1; }
+
+  /* Map legend */
+  .map-legend {
+    position: absolute;
+    bottom: 8px;
+    left: 12px;
+    display: flex;
+    gap: 16px;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.65rem;
+    color: rgba(26,26,26,0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(236,234,228,0.8);
+    padding: 4px 10px;
+    border-radius: 3px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .legend-dot.red { background: #b71c1c; }
+  .legend-dot.blue { background: var(--blue); }
+
+  /* Map location callout */
+  .map-callout {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    font-family: 'Source Sans Pro', sans-serif;
+    text-align: right;
+  }
+
+  .callout-location {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #7f0000;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-shadow: 0 1px 2px rgba(236,234,228,0.8);
+  }
+
+  .callout-date {
+    font-size: 0.7rem;
+    color: rgba(26,26,26,0.7);
+  }
+
+  /* Pulse animation */
+  @keyframes pulse {
+    0% { r: 14; opacity: 0.6; }
+    50% { r: 28; opacity: 0; }
+    100% { r: 14; opacity: 0; }
+  }
+
+  .pulse-ring {
+    fill: none;
+    stroke: #b71c1c;
+    stroke-width: 3;
+    opacity: 0;
+  }
+
+  .pulse-ring.active {
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  /* ===== MAIN CONTENT ===== */
+  #game-container {
+    max-width: 750px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem 4rem;
+    display: none;
+  }
+
+  #game-container.active { display: block; }
+
+  .scene-location {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .scene-date {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+  }
+
+  .scene-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+    line-height: 1.3;
+  }
+
+  .scene-narrative { margin-bottom: 2rem; }
+
+  .scene-photo {
+    width: 100%;
+    margin: 1.5rem 0;
+    border: 3px solid var(--bg-dark);
+    box-shadow: 0 2px 12px var(--shadow);
+  }
+
+  .scene-photo img {
+    width: 100%;
+    display: block;
+    filter: grayscale(30%) sepia(5%);
+  }
+
+  .scene-photo figcaption {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.75rem;
+    color: var(--text-light);
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-dark);
+    line-height: 1.4;
+    font-style: italic;
+  }
+
+  .scene-narrative p {
+    margin-bottom: 1.2rem;
+    font-size: 1.05rem;
+  }
+
+  .scene-narrative .historical-note {
+    background: var(--bg-dark);
+    border-left: 3px solid var(--gold);
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--text-light);
+  }
+
+  .scene-narrative .vocab-term {
+    border-bottom: 1px dashed var(--gold);
+    cursor: help;
+    position: relative;
+  }
+
+  .scene-narrative .vocab-term:hover::after {
+    content: attr(data-def);
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background: var(--blue);
+    color: #fff;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    font-style: normal;
+    border-radius: 4px;
+    width: 280px;
+    z-index: 10;
+    line-height: 1.5;
+  }
+
+  .choice-prompt {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--blue);
+  }
+
+  .choices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .choice-btn {
+    font-family: 'Source Sans Pro', sans-serif;
+    text-align: left;
+    padding: 1.1rem 1.5rem;
+    background: var(--card-bg);
+    border: 2px solid var(--bg-dark);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--text);
+    transition: all 0.2s;
+  }
+
+  .choice-btn:hover {
+    border-color: var(--accent);
+    background: #fff;
+  }
+
+  .choice-btn .choice-label {
+    font-weight: 700;
+    color: var(--accent);
+    margin-right: 0.5rem;
+  }
+
+  .consequence {
+    background: var(--card-bg);
+    border-left: 3px solid var(--accent);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+    font-size: 1rem;
+    line-height: 1.8;
+  }
+
+  .consequence p { margin-bottom: 0.8rem; }
+  .consequence p:last-child { margin-bottom: 0; }
+
+  .continue-btn {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.85rem 2.5rem;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    transition: background 0.2s;
+  }
+
+  .continue-btn:hover { background: #2a3a5e; }
+
+  .nav-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .back-btn {
+    display: inline-block;
+    background: none;
+    border: 1px solid #999;
+    color: #666;
+    padding: 0.4rem 1rem;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .back-btn:hover {
+    background: #eee;
+    color: #333;
+    border-color: #666;
+  }
+
+  .epilogue-section { margin-bottom: 2rem; }
+
+  .epilogue-section h3 {
+    font-size: 1.15rem;
+    margin-bottom: 0.75rem;
+    color: var(--blue);
+  }
+
+  .epilogue-section ul { padding-left: 1.5rem; }
+
+  .epilogue-section li {
+    margin-bottom: 0.6rem;
+    font-size: 1rem;
+  }
+
+  .restart-btn {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.85rem 2.5rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 1rem;
+    transition: background 0.2s;
+  }
+
+  .restart-btn:hover { background: var(--accent-light); }
+
+  /* ===== REFLECTION FORM ===== */
+  .reflection-section {
+    margin-top: 3rem;
+    padding-top: 2.5rem;
+    border-top: 2px solid var(--bg-dark);
+  }
+
+  .reflection-section h2 {
+    font-size: 1.5rem;
+    color: var(--blue);
+    margin-bottom: 0.5rem;
+  }
+
+  .reflection-intro {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+    font-style: italic;
+  }
+
+  .reflection-field { margin-bottom: 2rem; }
+
+  .reflection-field label {
+    display: block;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+  }
+
+  .reflection-field textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 0.85rem 1rem;
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--card-bg);
+    border: 2px solid var(--bg-dark);
+    resize: vertical;
+    transition: border-color 0.2s;
+  }
+
+  .reflection-field textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+  }
+
+  .reflection-field textarea::placeholder {
+    color: #a09888;
+    font-style: italic;
+  }
+
+  .name-field { margin-bottom: 2rem; }
+
+  .name-field label {
+    display: block;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.4rem;
+  }
+
+  .name-field input {
+    width: 100%;
+    max-width: 400px;
+    padding: 0.7rem 1rem;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1rem;
+    color: var(--text);
+    background: var(--card-bg);
+    border: 2px solid var(--bg-dark);
+    transition: border-color 0.2s;
+  }
+
+  .name-field input:focus {
+    outline: none;
+    border-color: var(--blue);
+  }
+
+  .name-field input::placeholder { color: #a09888; }
+
+  .reflection-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+
+  .save-pdf-btn {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.85rem 2.5rem;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    transition: background 0.2s;
+  }
+
+  .save-pdf-btn:hover { background: #2a3a5e; }
+
+  .save-pdf-btn:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+
+  .pdf-note {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin-top: 0.75rem;
+  }
+
+  .fade-in { animation: fadeIn 0.6s ease forwards; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== INCIDENT REPORT MODAL ===== */
+  .report-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 2rem 1rem;
+  }
+  .report-overlay.active { display: flex; justify-content: center; align-items: flex-start; }
+  .report-modal {
+    background: #f5f3ed;
+    background-image: linear-gradient(to bottom, #f5f3ed, #ebe8de);
+    max-width: 650px;
+    width: 100%;
+    border-radius: 4px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    padding: 2.5rem 2rem;
+    font-family: 'Source Sans Pro', sans-serif;
+    color: #1a1a1a;
+    position: relative;
+  }
+  .report-modal h2 {
+    font-family: 'Source Sans Pro', sans-serif;
+    text-align: center;
+    font-size: 1.4rem;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+  }
+  .report-modal .report-subtitle {
+    text-align: center;
+    font-style: italic;
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+  .report-modal .report-classification {
+    text-align: center;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    padding: 0.3rem;
+    border: 2px solid var(--accent);
+    display: inline-block;
+    width: 100%;
+  }
+  .report-modal .report-intro {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    color: #555;
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+  }
+  .report-modal label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+    color: var(--blue);
+  }
+  .report-modal input[type="text"],
+  .report-modal textarea {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    background: #fff;
+  }
+  .report-modal textarea { min-height: 70px; resize: vertical; }
+  .report-modal .report-field { margin-bottom: 1.2rem; }
+  .report-modal .legal-text {
+    font-size: 0.8rem;
+    font-style: italic;
+    color: #777;
+    line-height: 1.5;
+    margin: 1.5rem 0;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    background: #faf8f3;
+  }
+  .report-submit-btn {
+    display: block;
+    width: 100%;
+    padding: 0.9rem;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 1.5rem;
+  }
+  .report-submit-btn:hover { background: #2a3a5e; }
+
+  /* ===== BROADCAST MODAL ===== */
+  .broadcast-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 1100;
+    padding: 1rem;
+  }
+  .broadcast-overlay.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  .broadcast-modal {
+    max-width: 700px;
+    width: 100%;
+    text-align: center;
+  }
+  .broadcast-modal h2 {
+    font-family: 'Libre Baskerville', serif;
+    color: #fff;
+    font-size: 1.4rem;
+    margin-bottom: 0.3rem;
+  }
+  .broadcast-modal .broadcast-dateline {
+    color: var(--gold);
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .broadcast-modal p.broadcast-subtitle {
+    color: #bbb;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.95rem;
+    margin-bottom: 1.2rem;
+    font-style: italic;
+    line-height: 1.6;
+  }
+  .broadcast-modal .broadcast-frame {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.3%;
+    margin: 0 auto;
+    background: #000;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .broadcast-modal .broadcast-frame iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  .broadcast-close-btn {
+    display: inline-block;
+    margin-top: 1.2rem;
+    padding: 0.7rem 2rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .broadcast-close-btn:hover { background: var(--accent-light); }
+
+  /* ===== EVIDENCE MODAL ===== */
+  .evidence-link {
+    color: var(--accent);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .evidence-link:hover { color: var(--accent-light); }
+  .evidence-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 1100;
+    overflow-y: auto;
+    padding: 2rem 1rem;
+  }
+  .evidence-overlay.active {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .evidence-modal {
+    background: #f5f3ed;
+    background-image: linear-gradient(to bottom, #f5f3ed, #ebe8de);
+    max-width: 750px;
+    width: 100%;
+    border-radius: 4px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    padding: 2.5rem 2rem;
+    font-family: 'Source Sans Pro', sans-serif;
+    color: #1a1a1a;
+    margin: 1rem auto;
+  }
+  .evidence-modal h2 {
+    font-family: 'Libre Baskerville', serif;
+    text-align: center;
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+    color: var(--accent);
+  }
+  .evidence-modal h3 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 1.1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #1a1a1a;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    padding-bottom: 0.3rem;
+  }
+  .evidence-modal p {
+    line-height: 1.7;
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+  }
+  .evidence-photos {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 1.2rem 0;
+  }
+  .evidence-photos figure {
+    flex: 1;
+    min-width: 140px;
+    max-width: 220px;
+    text-align: center;
+  }
+  .evidence-photos img {
+    width: 100%;
+    border-radius: 4px;
+    border: 2px solid rgba(0,0,0,0.15);
+  }
+  .evidence-photos figcaption {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 0.3rem;
+    font-style: italic;
+  }
+  .evidence-close-btn {
+    display: block;
+    margin: 1.5rem auto 0;
+    padding: 0.7rem 2.5rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .evidence-close-btn:hover { background: var(--accent-light); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 700px) {
+    #title-screen h1 { font-size: 2.2rem; }
+    #title-screen .subtitle { font-size: 1rem; }
+    .map-wrapper { height: 280px; }
+    .map-callout { display: none; }
+    .map-legend { display: none; }
+    #game-container { padding: 1.5rem 1rem 3rem; }
+    .scene-title { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== TITLE SCREEN ===== -->
+<div id="title-screen">
+  <h1>JFK</h1>
+  <div class="subtitle">November 22, 1963</div>
+  <div class="intro-text">
+    At 12:30 p.m. on November 22, 1963, President John Fitzgerald Kennedy was assassinated while riding in a motorcade through Dealey Plaza in Dallas, Texas. Within hours, a suspect was arrested. Within days, that suspect was dead. Within months, a presidential commission declared the case closed.
+    <br><br>
+    In this simulation, you are a <em>United States Secret Service agent</em> assigned to the investigation. You will walk through the evidence, make decisions about which leads to pursue, and testify before the Warren Commission.
+    <br><br>
+    The people in this story were real. The evidence is real. The questions are still being asked.
+  </div>
+  <button class="btn-start" onclick="startGame()">Begin Investigation</button>
+</div>
+
+<!-- ===== AUDIO ===== -->
+<audio id="intro-audio" preload="auto"></audio>
+<div id="epilogue-audio-container" style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;"></div>
+
+<!-- ===== MAP PANEL ===== -->
+<div id="map-panel">
+  <div class="map-wrapper">
+    <svg class="map-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- Map background: streets and area labels drawn in SVG -->
+      <!-- Dallas area grid -->
+      <rect x="0" y="0" width="1000" height="600" fill="#c8cdd5"/>
+
+      <!-- Major road grid -->
+      <g stroke="#a8aeb8" stroke-width="1" fill="none">
+        <!-- Horizontal streets -->
+        <line x1="0" y1="100" x2="1000" y2="100"/>
+        <line x1="0" y1="200" x2="1000" y2="200"/>
+        <line x1="0" y1="300" x2="1000" y2="300"/>
+        <line x1="0" y1="400" x2="1000" y2="400"/>
+        <line x1="0" y1="500" x2="1000" y2="500"/>
+        <!-- Vertical streets -->
+        <line x1="100" y1="0" x2="100" y2="600"/>
+        <line x1="250" y1="0" x2="250" y2="600"/>
+        <line x1="400" y1="0" x2="400" y2="600"/>
+        <line x1="550" y1="0" x2="550" y2="600"/>
+        <line x1="700" y1="0" x2="700" y2="600"/>
+        <line x1="850" y1="0" x2="850" y2="600"/>
+      </g>
+
+      <!-- Major roads (thicker) -->
+      <g stroke="#8a9099" stroke-width="3" fill="none">
+        <!-- Stemmons Freeway (diagonal, NW to center) -->
+        <path d="M 100,50 L 300,250 L 350,300"/>
+        <!-- Elm Street through Dealey Plaza -->
+        <path d="M 550,220 L 350,250 L 300,260"/>
+        <!-- Main Street -->
+        <path d="M 550,260 L 350,280 L 300,290"/>
+        <!-- Commerce Street -->
+        <path d="M 550,300 L 350,310 L 300,320"/>
+        <!-- Houston Street (N-S through Dealey) -->
+        <line x1="400" y1="150" x2="400" y2="400"/>
+        <!-- Beckley Ave (to Oak Cliff) -->
+        <path d="M 300,320 L 200,450 L 150,520"/>
+        <!-- Jefferson Blvd -->
+        <line x1="50" y1="480" x2="400" y2="480"/>
+      </g>
+
+      <!-- Area labels -->
+      <text x="750" y="80" font-family="'Source Sans Pro', sans-serif" font-size="14" fill="#666" font-weight="600" text-anchor="middle" letter-spacing="0.15em">LOVE FIELD</text>
+      <text x="400" y="170" font-family="'Source Sans Pro', sans-serif" font-size="11" fill="#888" font-weight="600" text-anchor="middle" letter-spacing="0.1em">DOWNTOWN DALLAS</text>
+      <text x="200" y="430" font-family="'Source Sans Pro', sans-serif" font-size="11" fill="#888" font-weight="600" text-anchor="middle" letter-spacing="0.1em">OAK CLIFF</text>
+
+      <!-- Motorcade route (dashed) -->
+      <path d="M 750,100 L 600,180 L 480,200 L 410,220 L 390,250 L 350,270"
+            stroke="var(--gold)" stroke-width="2.5" stroke-dasharray="8,4" fill="none" opacity="0.7"/>
+
+      <!-- Danger markers -->
+      <g class="danger-icon" id="danger-dealey">
+        <text x="370" y="240" font-size="22" text-anchor="middle" style="filter:url(#glow)">&#x1F4A5;</text>
+      </g>
+      <g class="danger-icon" id="danger-tippit">
+        <text x="220" y="470" font-size="20" text-anchor="middle" style="filter:url(#glow)">&#x1F52B;</text>
+      </g>
+      <g class="danger-icon" id="danger-ruby">
+        <text x="520" y="350" font-size="20" text-anchor="middle" style="filter:url(#glow)">&#x26A0;</text>
+      </g>
+
+      <!-- City markers layer -->
+      <g id="cities-layer">
+        <!-- Love Field -->
+        <g class="city-group" data-city="lovefield">
+          <circle class="pulse-ring" cx="750" cy="100" r="18"/>
+          <circle class="city-dot-outer" cx="750" cy="100" r="16" data-city="lovefield"/>
+          <circle class="city-dot-inner" cx="750" cy="100" r="5"/>
+        </g>
+        <text class="city-label" data-city="lovefield" x="750" y="130">Love Field</text>
+
+        <!-- Dealey Plaza / TSBD -->
+        <g class="city-group" data-city="dealey">
+          <circle class="pulse-ring" cx="380" cy="250" r="18"/>
+          <circle class="city-dot-outer" cx="380" cy="250" r="16" data-city="dealey"/>
+          <circle class="city-dot-inner" cx="380" cy="250" r="5"/>
+        </g>
+        <text class="city-label" data-city="dealey" x="380" y="225">Dealey Plaza</text>
+
+        <!-- Parkland Hospital -->
+        <g class="city-group" data-city="parkland">
+          <circle class="pulse-ring" cx="200" cy="150" r="18"/>
+          <circle class="city-dot-outer" cx="200" cy="150" r="16" data-city="parkland"/>
+          <circle class="city-dot-inner" cx="200" cy="150" r="5"/>
+        </g>
+        <text class="city-label" data-city="parkland" x="200" y="140">Parkland Hospital</text>
+
+        <!-- TSBD (6th Floor) -->
+        <g class="city-group" data-city="tsbd">
+          <circle class="pulse-ring" cx="410" cy="220" r="18"/>
+          <circle class="city-dot-outer" cx="410" cy="220" r="16" data-city="tsbd"/>
+          <circle class="city-dot-inner" cx="410" cy="220" r="5"/>
+        </g>
+        <text class="city-label" data-city="tsbd" x="410" y="205">Book Depository</text>
+
+        <!-- Dallas Police HQ -->
+        <g class="city-group" data-city="dallaspd">
+          <circle class="pulse-ring" cx="520" cy="340" r="18"/>
+          <circle class="city-dot-outer" cx="520" cy="340" r="16" data-city="dallaspd"/>
+          <circle class="city-dot-inner" cx="520" cy="340" r="5"/>
+        </g>
+        <text class="city-label" data-city="dallaspd" x="520" y="370">Dallas Police HQ</text>
+
+        <!-- Tippit shooting (10th & Patton) -->
+        <g class="city-group" data-city="tippit">
+          <circle class="pulse-ring" cx="220" cy="480" r="18"/>
+          <circle class="city-dot-outer" cx="220" cy="480" r="16" data-city="tippit"/>
+          <circle class="city-dot-inner" cx="220" cy="480" r="5"/>
+        </g>
+        <text class="city-label" data-city="tippit" x="220" y="510">10th &amp; Patton</text>
+
+        <!-- Texas Theatre -->
+        <g class="city-group" data-city="theatre">
+          <circle class="pulse-ring" cx="150" cy="480" r="18"/>
+          <circle class="city-dot-outer" cx="150" cy="480" r="16" data-city="theatre"/>
+          <circle class="city-dot-inner" cx="150" cy="480" r="5"/>
+        </g>
+        <text class="city-label" data-city="theatre" x="150" y="510">Texas Theatre</text>
+
+        <!-- Washington D.C. (Warren Commission) -->
+        <g class="city-group" data-city="washington">
+          <circle class="pulse-ring" cx="900" cy="520" r="18"/>
+          <circle class="city-dot-outer" cx="900" cy="520" r="16" data-city="washington"/>
+          <circle class="city-dot-inner" cx="900" cy="520" r="5"/>
+        </g>
+        <text class="city-label" data-city="washington" x="900" y="550">Washington, D.C.</text>
+      </g>
+    </svg>
+
+    <!-- Map callout -->
+    <div class="map-callout">
+      <div class="callout-location" id="callout-location"></div>
+      <div class="callout-date" id="callout-date"></div>
+    </div>
+
+    <!-- Legend -->
+    <div class="map-legend">
+      <div class="legend-item">
+        <div class="legend-dot red"></div>
+        <span>Current location</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot blue"></div>
+        <span>Investigated</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GAME CONTENT ===== -->
+<div id="game-container"></div>
+
+<script>
+// ============================================================
+// GAME STATE
+// ============================================================
+const state = {
+  currentScene: null,
+  approachChoice: null, // 'depository' or 'parkland' (chosen in scene3)
+  decisions: [],
+  visitedStops: [],
+  sceneHistory: [],
+  forwardHistory: [],
+  reachedEpilogue: false,
+  report: null,
+  _pendingChoice: null
+};
+
+// ============================================================
+// MAP CONFIGURATION
+// ============================================================
+const stopOrder = ['lovefield', 'dealey', 'parkland', 'tsbd', 'dallaspd', 'tippit', 'theatre', 'washington'];
+
+const cityPositions = {
+  lovefield:  { x: 750, y: 100, label: "Love Field, Dallas" },
+  dealey:     { x: 380, y: 250, label: "Dealey Plaza, Dallas" },
+  parkland:   { x: 200, y: 150, label: "Parkland Memorial Hospital" },
+  tsbd:       { x: 410, y: 220, label: "TX School Book Depository" },
+  dallaspd:   { x: 520, y: 340, label: "Dallas Police Headquarters" },
+  tippit:     { x: 220, y: 480, label: "10th & Patton, Oak Cliff" },
+  theatre:    { x: 150, y: 480, label: "Texas Theatre, Oak Cliff" },
+  washington: { x: 900, y: 520, label: "Washington, D.C." }
+};
+
+const dangerTriggers = {
+  dealey: 'danger-dealey',
+  tippit: 'danger-tippit',
+  dallaspd: 'danger-ruby'
+};
+
+function updateRouteMap(currentStop, locationText, dateText) {
+  if (!currentStop) return;
+  const idx = stopOrder.indexOf(currentStop);
+  if (idx === -1) return;
+
+  if (!state.visitedStops.includes(currentStop)) {
+    state.visitedStops.push(currentStop);
+  }
+
+  // Update city dots
+  document.querySelectorAll('.city-dot-outer').forEach(dot => {
+    const city = dot.getAttribute('data-city');
+    dot.classList.remove('visited', 'current');
+    if (state.visitedStops.includes(city) && city !== currentStop) {
+      dot.classList.add('visited');
+    }
+    if (city === currentStop) dot.classList.add('current');
+  });
+
+  // Update labels
+  document.querySelectorAll('.city-label').forEach(label => {
+    const city = label.getAttribute('data-city');
+    label.classList.remove('visited', 'current');
+    if (state.visitedStops.includes(city) && city !== currentStop) {
+      label.classList.add('visited');
+    }
+    if (city === currentStop) label.classList.add('current');
+  });
+
+  // Pulse ring
+  document.querySelectorAll('.pulse-ring').forEach(ring => ring.classList.remove('active'));
+  const currentGroup = document.querySelector(`.city-group[data-city="${currentStop}"]`);
+  if (currentGroup) {
+    currentGroup.querySelector('.pulse-ring').classList.add('active');
+  }
+
+  // Danger markers
+  Object.entries(dangerTriggers).forEach(([stop, id]) => {
+    if (state.visitedStops.includes(stop)) {
+      document.getElementById(id).classList.add('visible');
+    }
+  });
+
+  // Callout
+  if (locationText) document.getElementById('callout-location').textContent = locationText;
+  if (dateText) document.getElementById('callout-date').textContent = dateText;
+}
+
+// ============================================================
+// SCENE DATA
+// ============================================================
+const scenes = {
+
+// ------ SCENE 1: THE ASSIGNMENT ------
+scene1: {
+  location: "Washington, D.C. / Dallas, Texas",
+  date: "November 21, 1963",
+  stop: "lovefield",
+  title: "The Assignment",
+  narrative: `
+    <p>You are a Special Agent with the United States Secret Service. You've been assigned to the <span class="vocab-term" data-def="The Secret Service advance team travels ahead of the President to survey locations, identify security threats, coordinate with local law enforcement, and plan motorcade routes and emergency procedures.">advance detail</span> for President Kennedy's upcoming trip to Texas.</p>
+
+    <p>The trip is political. Texas is critical for the 1964 election, and the Democratic Party in Texas is fractured. Governor John Connally and Senator Ralph Yarborough are barely speaking to each other. The President is coming to mend fences, raise money, and show strength in a state he won by the thinnest of margins in 1960.</p>
+
+    <p>The itinerary includes stops in San Antonio, Houston, Fort Worth, and Dallas. The Dallas leg concerns you the most.</p>
+
+    <figure class="scene-photo">
+      <img src="dallas-morning-news.jpg" alt="Dallas Morning News headline about JFK visit">
+      <figcaption>Dallas had become a hotbed of far-right political activity. Just weeks earlier, U.N. Ambassador Adlai Stevenson had been spat on and struck with a sign at a Dallas event.</figcaption>
+    </figure>
+
+    <div class="historical-note">
+      <strong>Historical context:</strong> Dallas in 1963 was one of the most politically hostile cities in America for the Kennedy administration. The city was a stronghold of far-right organizations, including the John Birch Society. In October 1963, U.N. Ambassador Adlai Stevenson was physically attacked at a Dallas speaking engagement. Some Kennedy advisors urged the President to skip Dallas entirely. He refused.
+    </div>
+
+    <p>Your supervisor, Special Agent in Charge Roy Kellerman, briefs your team. <strong>"The motorcade through Dallas is set for tomorrow. The route goes from Love Field through downtown to the Trade Mart, where the President will speak at a luncheon. Local police will provide support, but this is our show. I want every inch of that route checked."</strong></p>
+
+    <p>You study the motorcade route. It takes the presidential limousine through the heart of downtown Dallas, including a sharp turn from Houston Street onto Elm Street, directly past the Texas School Book Depository building, before heading onto the Stemmons Freeway toward the Trade Mart.</p>
+
+    <p>The sharp turn onto Elm Street bothers you. The car will have to slow to nearly a crawl to make that turn. Tall buildings overlook the route from multiple angles.</p>
+  `,
+  prompt: "How do you spend your remaining preparation time?",
+  choices: [
+    {
+      label: "A",
+      text: "Focus on the motorcade route — walk every block, check every building entrance and rooftop along the path.",
+      consequence: `<p>You walk the route from Love Field to the Trade Mart. You note the tall buildings, the open windows, the sharp turn at Houston and Elm. You flag the turn as a concern — the limousine will slow to walking speed. But there are hundreds of windows overlooking the route. You can't check them all. No advance team can. You file your report and note the concern. Standard procedure does not require securing every building along a motorcade route. It never has.</p>
+      <p>That night in Fort Worth, you learn something else: the President has requested the <span class="vocab-term" data-def="The presidential limousine, a custom-built 1961 Lincoln Continental convertible (code name SS-100-X), could be fitted with a clear 'bubble top' that offered some protection from weather but was not bulletproof. It could also be removed entirely for an open-top ride.">bubble top</span> be removed from the limousine. He wants an open car. He wants the people of Dallas to see him.</p>`,
+      next: "scene2"
+    },
+    {
+      label: "B",
+      text: "Focus on the Trade Mart venue — that's where the President will be most exposed to a crowd.",
+      consequence: `<p>You spend hours at the Trade Mart, coordinating with Dallas police on crowd control, checking entrances and exits, screening the guest list. The venue is manageable — controlled access, limited entry points. You feel confident about it.</p>
+      <p>But the motorcade route nags at you. Another agent has walked it, but the report notes the sharp turn at Houston and Elm Street, where the car will have to slow to near-walking speed, and the tall buildings with hundreds of unscreened windows overlooking the route. There isn't time to secure every building. There never is. Standard procedure doesn't require it.</p>
+      <p>That night in Fort Worth, you learn the President has requested the <span class="vocab-term" data-def="The presidential limousine, a custom-built 1961 Lincoln Continental convertible (code name SS-100-X), could be fitted with a clear 'bubble top' that offered some protection from weather but was not bulletproof. It could also be removed entirely for an open-top ride.">bubble top</span> be removed from the limousine. Open car. No cover. He wants the people of Dallas to see him.</p>`,
+      next: "scene2"
+    }
+  ]
+},
+
+// ------ SCENE 2: THE MOTORCADE ------
+scene2: {
+  location: "Dallas, Texas",
+  date: "November 22, 1963 — 11:40 a.m.",
+  stop: "lovefield",
+  title: "The Motorcade",
+  narrative: `
+    <p>Air Force One touches down at Love Field at 11:40 a.m. The weather has cleared — it was overcast earlier, but now the sun is out. This confirms the decision: open car, no bubble top.</p>
+
+    <figure class="scene-photo">
+      <img src="lovefield-arrival.jpg" alt="President and Mrs. Kennedy arriving at Love Field, Dallas">
+      <figcaption>President and Mrs. Kennedy arrive at Love Field, Dallas, Texas, November 22, 1963. The crowd at the airport is enthusiastic and friendly.</figcaption>
+    </figure>
+
+    <p>President Kennedy and First Lady Jacqueline Kennedy are greeted by an enthusiastic crowd at the airport. Mrs. Kennedy is handed a bouquet of red roses. The President works the fence line, shaking hands. He is relaxed, smiling. The crowd is warm.</p>
+
+    <p>The motorcade forms up. The presidential limousine — a midnight-blue 1961 Lincoln Continental convertible, code name <strong>SS-100-X</strong> — carries President Kennedy, Mrs. Kennedy, Governor John Connally, and Mrs. Connally. Two Secret Service agents sit in front: driver William Greer and Agent Kellerman.</p>
+
+    <p>You are in the <span class="vocab-term" data-def="The Secret Service follow-up car (code name 'Halfback') traveled directly behind the presidential limousine, carrying eight Secret Service agents. Four agents stood on the running boards, ready to leap to the President's car at any sign of danger.">follow-up car</span> directly behind the presidential limousine, code name "Halfback," along with seven other agents.</p>
+
+    <div class="historical-note">
+      <strong>Historical context:</strong> Secret Service protocol at the time did not require buildings along motorcade routes to be secured or windows to be closed. The Warren Commission would later note that it would have been physically impossible to check every window and rooftop along the 10-mile route. The Secret Service relied primarily on agents in the follow-up car and on scanning crowds at street level — not on overhead surveillance.
+    </div>
+
+    <p>The motorcade winds through Dallas. The crowds are large and friendly — far more welcoming than anyone expected. At one point, Mrs. Connally turns to the President and says: <strong>"Mr. President, you can't say Dallas doesn't love you."</strong></p>
+
+    <p>The President smiles. <strong>"No, you certainly can't,"</strong> he replies.</p>
+
+    <p>The motorcade approaches Dealey Plaza. The limousine makes the slow turn from Main Street onto Houston Street, then the sharp left onto Elm Street, passing directly beneath the Texas School Book Depository. The car slows to approximately 11 miles per hour.</p>
+
+    <p>It is 12:30 p.m.</p>
+  `,
+  prompt: null,
+  choices: [],
+  auto_next: "scene3"
+},
+
+// ------ SCENE 3: 12:30 P.M. ------
+scene3: {
+  location: "Dealey Plaza, Dallas, Texas",
+  date: "November 22, 1963 — 12:30 p.m.",
+  stop: "dealey",
+  title: "12:30 p.m.",
+  narrative: `
+    <p>You hear a sharp crack. It sounds like a firecracker — or a backfire.</p>
+
+    <p>Then a second crack. Then a third.</p>
+
+    <p>In the presidential limousine ahead of you, you see President Kennedy reach for his throat. Governor Connally cries out. Then the President's head snaps forward and to the left.</p>
+
+    <p><strong>Mrs. Kennedy is climbing onto the trunk of the limousine.</strong></p>
+
+    <figure class="scene-photo">
+      <img src="dealey-plaza.jpg" alt="Dealey Plaza, Dallas, Texas, the site of the assassination">
+      <figcaption>Dealey Plaza, Dallas, Texas. The motorcade was passing through this open area when the shots were fired. The Texas School Book Depository building is visible at the far end of Elm Street.</figcaption>
+    </figure>
+
+    <p>Agent Clint Hill, riding on the left running board of your follow-up car, sprints forward and leaps onto the back of the presidential limousine. He pushes Mrs. Kennedy back into the car and shields both her and the President with his body. Driver William Greer accelerates. The limousine surges forward toward the Stemmons Freeway.</p>
+
+    <p>Everything has happened in approximately six seconds.</p>
+
+    <div class="historical-note">
+      <strong>Historical context:</strong> Three shots were fired in Dealey Plaza in approximately 5.6 to 8.3 seconds (the exact timing remains debated). Most witnesses reported hearing three shots. Agent Clint Hill was the only Secret Service agent to reach the presidential limousine. His response — sprinting from the follow-up car and shielding Mrs. Kennedy — is one of the most documented acts of the entire event. Hill would be haunted by the belief that if he had been one second faster, he might have shielded the President from the fatal shot.
+    </div>
+
+    <p>People in Dealey Plaza are screaming, running, throwing themselves to the ground. Some are pointing toward the upper floors of the Texas School Book Depository. Others are pointing toward a wooden fence on a grassy rise to the right of the motorcade — the area that will become known as the <span class="vocab-term" data-def="A grassy, sloped area to the right (north) of the presidential motorcade route in Dealey Plaza. Some witnesses believed shots came from behind the wooden fence atop this knoll. The Warren Commission concluded all shots came from the Texas School Book Depository, but the grassy knoll became central to conspiracy theories.">grassy knoll</span>.</p>
+
+    <p>The radio crackles with Agent Kellerman's voice from the lead car: <strong>"We're hit! Get us to a hospital! Fast!"</strong></p>
+
+    <p>In the chaos, you have a split-second decision to make.</p>
+  `,
+  prompt: "What do you do?",
+  choices: [
+    {
+      label: "A",
+      text: "Rush toward the Texas School Book Depository — multiple witnesses are pointing at the upper floors. Secure the building.",
+      consequence: `<p>You break toward the Book Depository with two Dallas police officers. Pigeons have scattered from the rooftop. You can see that a window on the upper floor is open. A man standing near the building says he saw a rifle barrel. "Up there," he says, pointing to the sixth floor. "I saw it."</p>
+      <p>You radio in your position: you are entering the Texas School Book Depository to search for a possible shooter. The limousine is already gone, racing toward Parkland Memorial Hospital. Your job now is the crime scene.</p>`,
+      next: "scene4",
+      effect: () => { state.approachChoice = 'depository'; }
+    },
+    {
+      label: "B",
+      text: "Stay with the motorcade — the President's safety is the primary mission. Follow the limousine to the hospital.",
+      consequence: `<p>You stay with the follow-up car as it races after the presidential limousine. The driver pushes through red lights, siren screaming. You arrive at Parkland Memorial Hospital within four minutes. Agents pour out and establish a perimeter. The President is rushed inside on a stretcher.</p>
+      <p>Agent Kellerman's face tells you everything. The wound is catastrophic. But the doctors are working. Your job is to secure the hospital, preserve any evidence in the limousine, and start documenting what happened. Meanwhile, Dallas police are converging on Dealey Plaza.</p>`,
+      next: "scene4",
+      effect: () => { state.approachChoice = 'parkland'; }
+    }
+  ]
+},
+
+// ------ SCENE 4: PARKLAND / THE AFTERMATH ------
+scene4: {
+  location: null,
+  date: "November 22, 1963 — 1:00 p.m.",
+  stop: "parkland",
+  get title() {
+    return state.approachChoice === 'depository' ? 'Parkland Memorial Hospital' : 'Parkland Memorial Hospital';
+  },
+  get narrative() {
+    return state.approachChoice === 'depository' ? this._depositoryNarrative : this._parklandNarrative;
+  },
+  get location() {
+    return "Parkland Memorial Hospital, Dallas";
+  },
+  _depositoryNarrative: `
+    <p>While you were at the Book Depository, the presidential limousine raced to Parkland Memorial Hospital. The word comes over the radio at 1:00 p.m. central time:</p>
+
+    <p><strong>President John Fitzgerald Kennedy is dead.</strong></p>
+
+    <p>You stand in the sixth floor stairwell of the Texas School Book Depository and feel the world shift under your feet. You are ordered to Parkland immediately. A Dallas police officer will secure the building until investigators arrive.</p>
+
+    <p>At Parkland, the scene is controlled chaos. Secret Service agents have secured a perimeter. Vice President Lyndon Johnson is under heavy guard in a separate area of the hospital. Mrs. Kennedy is in the trauma room, refusing to leave her husband's side.</p>
+
+    <figure class="scene-photo">
+      <img src="parkland-hospital.jpg" alt="Parkland Memorial Hospital, Dallas, 1963">
+      <figcaption>Parkland Memorial Hospital, Dallas, Texas. President Kennedy was pronounced dead in Trauma Room 1 at 1:00 p.m. Central Standard Time, November 22, 1963.</figcaption>
+    </figure>
+
+    <div class="historical-note">
+      <strong>Historical context:</strong> President Kennedy was pronounced dead at 1:00 p.m. CST by Dr. William Kemp Clark. The cause of death was a massive gunshot wound to the head. Governor Connally, also seriously wounded, survived after emergency surgery. At the hospital, a fierce jurisdictional dispute erupted: the Dallas County Medical Examiner insisted on performing the autopsy in Texas (as required by Texas law — presidential assassination was not yet a federal crime), while the Secret Service insisted on taking the President's body back to Washington. The Secret Service prevailed, physically removing the casket over the objections of Dallas officials.
+    </div>
+
+    <p>Agent Kellerman pulls you aside. <strong>"We're taking the body back to Washington. Johnson is being sworn in on Air Force One. I need you focused: this is now the largest criminal investigation in American history, and right now, we don't know if this was one shooter, two shooters, a conspiracy, or a foreign attack. We don't know anything. Start documenting everything."</strong></p>
+
+    <p>At 2:38 p.m., aboard Air Force One, still on the ground at Love Field, Lyndon Baines Johnson is sworn in as the 36th President of the United States. Mrs. Kennedy stands beside him, still wearing the pink suit stained with her husband's blood. She has refused to change. <strong>"Let them see what they've done,"</strong> she says.</p>
+
+    <figure class="scene-photo">
+      <img src="lbj-swearing-in.jpg" alt="Lyndon Johnson being sworn in as President aboard Air Force One">
+      <figcaption>Lyndon B. Johnson takes the oath of office aboard Air Force One at Love Field, Dallas. Mrs. Kennedy stands to his left. Federal Judge Sarah T. Hughes administers the oath.</figcaption>
+    </figure>
+  `,
+  _parklandNarrative: `
+    <p>You arrive at Parkland Memorial Hospital within four minutes of the shooting. The President is rushed into Trauma Room 1. Doctors are already working, but you can see from their faces that the situation is grave.</p>
+
+    <p>At 1:00 p.m. central time, Dr. William Kemp Clark pronounces President John Fitzgerald Kennedy dead.</p>
+
+    <p>The word spreads through the hospital in whispers, then in sobs. Mrs. Kennedy is in the trauma room, refusing to leave. She is still wearing the pink suit. She will refuse to change for the rest of the day. <strong>"Let them see what they've done,"</strong> she says.</p>
+
+    <figure class="scene-photo">
+      <img src="parkland-hospital.jpg" alt="Parkland Memorial Hospital, Dallas, 1963">
+      <figcaption>Parkland Memorial Hospital, Dallas, Texas. President Kennedy was pronounced dead in Trauma Room 1 at 1:00 p.m. Central Standard Time, November 22, 1963.</figcaption>
+    </figure>
+
+    <p>Governor Connally is in surgery — he was hit in the back, chest, wrist, and thigh, but he will survive. Meanwhile, a jurisdictional battle erupts. The Dallas County Medical Examiner insists on performing the autopsy in Dallas, as Texas law requires. Your team insists on taking the President's body to Washington. Voices are raised. The Secret Service physically removes the casket from Parkland over the objections of Dallas officials.</p>
+
+    <div class="historical-note">
+      <strong>Historical context:</strong> In 1963, assassinating a president was not a federal crime. Jurisdiction technically belonged to Dallas County. The Secret Service's removal of the body before a local autopsy could be performed would become one of many points of controversy in the investigation. The autopsy was ultimately performed at Bethesda Naval Hospital in Maryland, conducted by military pathologists who were not experienced forensic specialists — a decision that would be criticized for decades.
+    </div>
+
+    <p>At 2:38 p.m., aboard Air Force One at Love Field, Lyndon Baines Johnson is sworn in as the 36th President of the United States. Mrs. Kennedy stands beside him, still in the bloodstained pink suit.</p>
+
+    <figure class="scene-photo">
+      <img src="lbj-swearing-in.jpg" alt="Lyndon Johnson being sworn in as President aboard Air Force One">
+      <figcaption>Lyndon B. Johnson takes the oath of office aboard Air Force One at Love Field, Dallas. Mrs. Kennedy stands to his left. Federal Judge Sarah T. Hughes administers the oath.</figcaption>
+    </figure>
+
+    <p>Agent Kellerman finds you in the hallway. <strong>"We don't know what we're dealing with. One shooter? A conspiracy? A foreign power? Right now Dallas PD is searching the Book Depository. They've found something on the sixth floor. I need you over there."</strong></p>
+  `,
+  prompt: "You are ordered to coordinate with the investigation team. Before you leave, Kellerman hands you a blank incident report form.",
+  choices: [
+    {
+      label: "A",
+      text: "Take the form and begin documenting everything you witnessed.",
+      consequence: `<p>You sit in a hospital corridor and begin writing. Your hand is shaking. You force it steady. <em>Date: November 22, 1963. Time of incident: approximately 12:30 p.m. CST. Location: Dealey Plaza, Dallas, Texas...</em></p>
+      <p>You write down everything: the sounds, the sequence, the positions of the cars, what you saw. This report will become part of the official record.</p>`,
+      next: "scene5"
+    },
+    {
+      label: "B",
+      text: "Take the form but head directly to the Book Depository first — the evidence won't wait.",
+      consequence: `<p>"You can fill it out on the way," Kellerman says. You grab a government sedan and drive back toward Dealey Plaza, writing notes on the form as you go. Time is critical — the crime scene needs to be secured and documented before anything is disturbed or lost.</p>`,
+      next: "scene5"
+    }
+  ]
+},
+
+// ------ SCENE 5: THE SIXTH FLOOR ------
+scene5: {
+  location: "Texas School Book Depository, Dallas",
+  date: "November 22, 1963 — 1:30 p.m.",
+  stop: "tsbd",
+  title: "The Sixth Floor",
+  narrative: `
+    <p>The Texas School Book Depository is a seven-story brick warehouse at the northwest corner of Dealey Plaza, at the intersection of Elm and Houston Streets. The building is used by a textbook distribution company. It is full of stacked cardboard boxes of schoolbooks.</p>
+
+    <p>Dallas police have already begun searching the building. On the sixth floor, they have found something.</p>
+
+    <p>Deputy Sheriff Luke Mooney discovered it first: in the southeast corner of the sixth floor, someone has arranged cardboard boxes into a <span class="vocab-term" data-def="A position constructed by a shooter to rest a weapon and provide concealment. In this case, boxes of textbooks were stacked to create a rest for a rifle and to shield the shooter from view of anyone else on the sixth floor.">sniper's nest</span>. Boxes are stacked to form a gun rest at the window. The window is half open. Three spent rifle cartridge casings lie on the floor.</p>
+
+    <figure class="scene-photo">
+      <img src="snipers-nest.jpg" alt="The sniper's nest on the sixth floor of the Texas School Book Depository">
+      <figcaption>The sniper's nest on the sixth floor of the Texas School Book Depository. Boxes of schoolbooks were arranged to create a gun rest and to conceal the shooter from view. Three spent cartridge casings were found on the floor near the window.</figcaption>
+    </figure>
+
+    <p>At 1:22 p.m., Deputy Constable Seymour Weitzman and Captain Will Fritz find the rifle itself — hidden between rows of stacked boxes near the northwest staircase. It is a <span class="vocab-term" data-def="A 6.5x52mm Italian bolt-action military rifle, originally manufactured in 1891 for the Italian Army. It was an inexpensive, surplus military weapon. The specific rifle found in the Book Depository was later traced to a mail-order purchase by Lee Harvey Oswald.">Mannlicher-Carcano 6.5mm bolt-action rifle</span> with a four-power telescopic sight. It has been recently fired.</p>
+
+    <figure class="scene-photo">
+      <img src="rifle.jpg" alt="The Mannlicher-Carcano rifle found on the sixth floor">
+      <figcaption>The 6.5mm Mannlicher-Carcano rifle found hidden between stacked boxes on the sixth floor of the Texas School Book Depository. A four-power telescopic sight was mounted on the weapon.</figcaption>
+    </figure>
+
+    <div class="historical-note">
+      <strong>Historical context:</strong> The rifle was later traced through its serial number (C2766) to a mail-order purchase from Klein's Sporting Goods in Chicago. The order form was filled out in the name "A. Hidell" — an alias used by Lee Harvey Oswald. The handwriting on the order form was matched to Oswald's. The rifle was shipped to a P.O. Box rented by Oswald in Dallas. A palm print matching Oswald's was found on the rifle barrel.
+    </div>
+
+    <p>The building manager, Roy Truly, has been checking which employees are present. He tells police that one employee is missing: <strong>Lee Harvey Oswald</strong>, a 24-year-old order filler who was hired in October. Oswald was seen on the sixth floor that morning. He is the only employee not accounted for.</p>
+
+    <p>You now have a crime scene, a weapon, shell casings, and a missing suspect. But important questions remain: How many shots were fired? From where exactly? Was there a second shooter?</p>
+  `,
+  prompt: "How do you focus the initial crime scene investigation?",
+  choices: [
+    {
+      label: "A",
+      text: "Focus on the physical evidence at the window — trajectory analysis, casings, the rifle. The physical evidence will tell the story.",
+      consequence: `<p>You work with the Dallas police crime scene team to document everything: the exact position of the casings, the angle of the window, the arrangement of boxes, a partial palm print on one of the boxes. You note the trajectory line from the sixth-floor window to the point in Elm Street where the President was struck. The distance is approximately 265 feet for the final shot — well within the range of the Mannlicher-Carcano. A bullet fragment is recovered from the limousine.</p>
+      <p>While you're working the sixth floor, word comes over the radio: an officer has been shot in the Oak Cliff neighborhood, south of the Trinity River. A suspect matching the description of the missing Book Depository employee has been seen in the area.</p>`,
+      next: "scene6"
+    },
+    {
+      label: "B",
+      text: "Interview the witnesses in Dealey Plaza first — multiple people were pointing in different directions. We need to know what they saw and heard.",
+      consequence: `<p>You move through Dealey Plaza interviewing witnesses. The accounts are confusing and contradictory — a common phenomenon in crisis situations. Most witnesses say they heard three shots. Many point toward the Book Depository. But several insist shots came from the grassy knoll to the right of the motorcade. A railroad worker on the overpass says he saw a puff of smoke near the wooden fence. A woman on the grass says the shots came from behind her — from the knoll.</p>
+      <p>The witness accounts are important but muddled. Eyewitness testimony under stress is notoriously unreliable. The physical evidence on the sixth floor — casings, rifle, sniper's nest — tells a clearer story. You will need to reconcile the witness accounts with the forensic evidence.</p>
+      <p>While you're conducting interviews, urgent word comes over the radio: a Dallas police officer has been shot in Oak Cliff. A suspect matching the description of the missing Book Depository employee was seen in the area.</p>`,
+      next: "scene6"
+    }
+  ]
+},
+
+// ------ SCENE 6: THE ARREST ------
+scene6: {
+  location: "Oak Cliff, Dallas, Texas",
+  date: "November 22, 1963 — 1:15–1:50 p.m.",
+  stop: "tippit",
+  title: "The Arrest",
+  narrative: `
+    <p>The timeline comes together quickly. After the assassination, Lee Harvey Oswald left the Book Depository. He was the only employee to leave the building after the shooting. He walked east on Elm Street, boarded a city bus, then exited the bus when it got stuck in traffic. He took a taxi to the Oak Cliff neighborhood and went to his rooming house at 1026 North Beckley Avenue, where he picked up a .38 caliber revolver and a jacket.</p>
+
+    <p>At approximately 1:15 p.m. — forty-five minutes after the assassination — Dallas Police Officer <strong>J.D. Tippit</strong> spotted a man matching the description broadcast over police radio: white male, slender build, approximately 5'10", wearing a light-colored jacket. Tippit pulled his patrol car alongside the man and called to him through the window.</p>
+
+    <p>The man walked to the patrol car and leaned in to speak through the passenger window. Then Officer Tippit got out of the car and walked toward the front. The man pulled a revolver and shot Tippit four times. Officer J.D. Tippit was killed instantly. He was 39 years old, married, with three children.</p>
+
+    <figure class="scene-photo">
+      <img src="tippit.jpg" alt="Officer J.D. Tippit, Dallas Police Department">
+      <figcaption>Officer J.D. Tippit, Dallas Police Department. Tippit was shot and killed approximately 45 minutes after the assassination of President Kennedy, less than a mile from Oswald's rooming house.</figcaption>
+    </figure>
+
+    <div class="historical-note">
+      <strong>Historical context:</strong> Multiple witnesses saw the shooting of Officer Tippit and identified the gunman. The bullets recovered from Tippit's body were matched to the .38 caliber Smith & Wesson revolver later taken from Oswald at the time of his arrest. The Tippit killing provided critical evidence linking Oswald to violent action on November 22 — it demonstrated that he was armed, dangerous, and fleeing.
+    </div>
+
+    <p>Multiple witnesses saw the gunman flee from the Tippit shooting scene. He was seen ducking into the entrance of the <strong>Texas Theatre</strong> on West Jefferson Boulevard without buying a ticket. A shoe store manager named Johnny Brewer noticed the suspicious behavior and alerted the theater's cashier, who called the police.</p>
+
+    <p>At 1:50 p.m., Dallas police officers entered the darkened Texas Theatre. The house lights came up. Officers moved down the aisles. When they reached the suspect, he stood up, punched an officer, and reached for the revolver in his waistband. After a struggle, he was subdued and handcuffed.</p>
+
+    <p><strong>"I am not resisting arrest!"</strong> he shouted as they dragged him out. <strong>"Police brutality!"</strong></p>
+
+    <figure class="scene-photo">
+      <img src="texas-theatre.jpg" alt="The Texas Theatre in Oak Cliff, Dallas">
+      <figcaption>The Texas Theatre on West Jefferson Boulevard in Oak Cliff, where Lee Harvey Oswald was arrested at approximately 1:50 p.m. on November 22, 1963.</figcaption>
+    </figure>
+
+    <p>The suspect is identified as <strong>Lee Harvey Oswald</strong>, age 24. The missing Texas School Book Depository employee.</p>
+
+    <p>He is taken to Dallas Police Headquarters for interrogation.</p>
+  `,
+  prompt: null,
+  choices: [],
+  auto_next: "scene7"
+},
+
+// ------ SCENE 7: THE INTERROGATION ------
+scene7: {
+  location: "Dallas Police Headquarters",
+  date: "November 22–24, 1963",
+  stop: "dallaspd",
+  title: "48 Hours",
+  narrative: `
+    <p>Lee Harvey Oswald is brought to Dallas Police Headquarters and placed in an interrogation room. Captain Will Fritz of the Dallas Homicide Bureau leads the questioning. Secret Service and FBI agents are present.</p>
+
+    <p>Oswald is calm, even defiant. He denies everything.</p>
+
+    <p><strong>"I didn't shoot anybody,"</strong> he says. When asked about the rifle, he says it belongs to someone else. When asked about the name "A. Hidell" on the mail-order form, he says he knows nothing about it. When asked why he left the Book Depository, he says he assumed work was done for the day because of "all the commotion."</p>
+
+    <p>When a reporter in the hallway shouts a question about the assassination, Oswald turns to the cameras and says: <strong>"I'm just a patsy."</strong></p>
+
+    <figure class="scene-photo">
+      <img src="oswald-arrest.jpg" alt="Lee Harvey Oswald after his arrest, Dallas Police Department">
+      <figcaption>Lee Harvey Oswald after his arrest at Dallas Police Headquarters. He maintained his innocence throughout 12 hours of interrogation, telling reporters he was "just a patsy."</figcaption>
+    </figure>
+
+    <div class="historical-note">
+      <strong>Historical context:</strong> Oswald was interrogated for approximately 12 hours over two days. Critically, no recordings were made of the interrogations — neither audio nor video. Captain Fritz took handwritten notes, but no stenographer was present. This failure to record the interrogation of the most important murder suspect in American history would become one of the most criticized aspects of the investigation. Oswald was never formally charged with the assassination of President Kennedy during his lifetime — he was charged with the murder of Officer Tippit on Friday night and with the assassination of the President on Saturday.
+    </div>
+
+    <p>Over the next 48 hours, the evidence against Oswald accumulates rapidly: his palm print on the rifle, fibers from his shirt matching fibers found on the rifle butt, the paper bag found near the sniper's nest (used to carry the rifle into the building), his ownership of the rifle through the mail-order purchase, the backyard photographs showing him holding the rifle and a pistol. He has no alibi for the time of the shooting.</p>
+
+    <p>But the investigation is chaotic. Dallas police, the FBI, and the Secret Service are all working the case with poor coordination. The press has overrun police headquarters — reporters fill the hallways, and Oswald is paraded past cameras multiple times. There is no formal chain of evidence protocol. The crime scene at the Book Depository is not sealed off properly.</p>
+
+    <p>Then, on Sunday morning, November 24, the investigation shatters.</p>
+
+    <p>Oswald is being transferred from the city jail to the county jail. The transfer is announced to the press in advance. The basement of police headquarters is packed with reporters, cameramen, and onlookers. Millions of Americans are watching live on television.</p>
+
+    <p>As Oswald is led through the basement in handcuffs, a man steps out of the crowd, pushes a .38 caliber Colt Cobra revolver into Oswald's abdomen, and fires a single shot.</p>
+
+    <figure class="scene-photo">
+      <img src="ruby-shooting.jpg" alt="Jack Ruby shoots Lee Harvey Oswald in the basement of Dallas Police Headquarters">
+      <figcaption>Jack Ruby shoots Lee Harvey Oswald in the basement of Dallas Police Headquarters, November 24, 1963. This photograph, taken by Robert H. Jackson of the Dallas Times Herald, won the Pulitzer Prize. Millions of Americans watched the shooting live on television.</figcaption>
+    </figure>
+
+    <p>The shooter is <strong>Jack Ruby</strong>, a 52-year-old Dallas nightclub owner. He is immediately subdued. Oswald is rushed to Parkland Memorial Hospital — the same hospital where President Kennedy was pronounced dead two days earlier. At 1:07 p.m., Lee Harvey Oswald is pronounced dead.</p>
+
+    <p>The only suspect in the assassination of the President of the United States is gone. He will never stand trial. He will never testify. He will never be cross-examined. Whatever Lee Harvey Oswald knew, he has taken it with him.</p>
+  `,
+  prompt: "The suspect is dead. How do you assess the situation?",
+  choices: [
+    {
+      label: "A",
+      text: "\"This makes it more important than ever to follow the physical evidence. Oswald can't talk, but the evidence can.\"",
+      consequence: `<p>Your supervisor agrees. "The physical evidence is what we have. The rifle, the bullets, the trajectories, the paper trail. We build the case the same way we would if Oswald were alive and going to trial. Every piece of evidence, documented, tested, verified." It is meticulous, unglamorous work. But it is the foundation of any investigation — and now it is all you have.</p>`,
+      next: "scene8"
+    },
+    {
+      label: "B",
+      text: "\"How did Ruby get into that basement? Someone let him in. We need to investigate Ruby as hard as we investigated Oswald.\"",
+      consequence: `<p>It's a critical question. Ruby was a known figure around Dallas police headquarters — nightclub owners cultivated relationships with officers. Several officers knew him by sight. But the fact that he walked into a secured basement transfer with a loaded weapon, on live national television, raises questions that demand answers. Was Ruby acting alone? Did someone help him get access? Was he silencing Oswald?</p>
+      <p>"We'll investigate Ruby," your supervisor says. "But we can't lose focus on the primary case. The assassination evidence doesn't stop being relevant because Oswald is dead." Both threads must be pursued.</p>`,
+      next: "scene8"
+    },
+    {
+      label: "C",
+      text: "\"Something doesn't add up. The whole thing — the route, the response, Oswald, and now Ruby. We need to look at this more broadly.\"",
+      consequence: `<p>Your supervisor looks at you carefully. "I understand why you feel that way. A lot of people are going to feel that way. But right now, our job is not to speculate — our job is to follow the evidence. Every piece of it. If there's a conspiracy, the evidence will show it. If there isn't, the evidence will show that too. We follow the evidence. That's how this works."</p>
+      <p>He's right. The instinct to see patterns is natural — especially when the events are this shocking. But investigations are built on evidence, not instinct. You return to the work.</p>`,
+      next: "scene8"
+    }
+  ]
+},
+
+// ------ SCENE 8: THE INVESTIGATION WIDENS ------
+scene8: {
+  location: "Dallas, Texas / Washington, D.C.",
+  date: "November – December, 1963",
+  stop: "dallaspd",
+  title: "The Investigation Widens",
+  narrative: `
+    <p>As the immediate shock subsides, the investigation expands. And the more you learn about Lee Harvey Oswald, the stranger the picture becomes.</p>
+
+    <p>Oswald was a former U.S. Marine who had been trained as a sharpshooter. In 1959, at age 19, he <span class="vocab-term" data-def="To renounce one's citizenship and move to a rival country. Oswald traveled to Moscow in October 1959, attempted to renounce his American citizenship at the U.S. Embassy, and told officials he intended to give the Soviets classified information from his Marine service.">defected to the Soviet Union</span>. He lived in Minsk for two and a half years, married a Russian woman named Marina, and then — remarkably — was allowed to return to the United States in June 1962 with his wife and infant daughter. Neither the CIA nor the FBI took significant steps to surveil him after his return, despite his extraordinary background.</p>
+
+    <figure class="scene-photo">
+      <img src="oswald-backyard.jpg" alt="Lee Harvey Oswald holding a Mannlicher-Carcano rifle in his backyard">
+      <figcaption>Lee Harvey Oswald photographed in his backyard in March 1963, holding the Mannlicher-Carcano rifle and wearing a holstered pistol. He is holding copies of two socialist newspapers. This photograph was taken by his wife Marina.</figcaption>
+    </figure>
+
+    <p>In the spring of 1963, Oswald purchased the Mannlicher-Carcano rifle by mail order. In April, he attempted to assassinate retired Major General <strong>Edwin Walker</strong>, a prominent far-right figure in Dallas, by firing a shot through Walker's window. He missed. Marina later confirmed the attempt.</p>
+
+    <p>In the summer of 1963, Oswald moved to New Orleans, where he established a one-man chapter of the <span class="vocab-term" data-def="The Fair Play for Cuba Committee was a national organization that advocated for normalized relations between the United States and Fidel Castro's Cuba. Oswald's chapter in New Orleans had only one member: himself. He was filmed distributing pro-Cuba leaflets on the streets of New Orleans.">Fair Play for Cuba Committee</span>, distributing pro-Castro leaflets on the street. He was arrested after a confrontation with anti-Castro Cuban exiles and appeared on local radio defending Cuba.</p>
+
+    <div class="historical-note">
+      <strong>Historical context:</strong> In late September 1963, just weeks before the assassination, Oswald traveled to Mexico City, where he visited both the Cuban Embassy and the Soviet Embassy. He apparently attempted to obtain a visa to travel to Cuba and then to the Soviet Union. He was denied. The details of Oswald's Mexico City trip, and what U.S. intelligence agencies knew about it, remain among the most debated aspects of the case. CIA surveillance of the embassies should have flagged Oswald's visits, but the information was not effectively shared with the FBI or Secret Service before November 22.
+    </div>
+
+    <p>The picture of Oswald is disorienting: a Marine sharpshooter who defected to the Soviet Union, returned to America, tried to assassinate a right-wing general, championed Castro's Cuba, visited Soviet and Cuban embassies in Mexico City, and then shot the President of the United States from a sixth-floor window with a $21 mail-order rifle.</p>
+
+    <p>Meanwhile, the investigation into Jack Ruby reveals a man deeply embedded in Dallas's underworld: nightclub owner, known associate of local police officers, with connections to organized crime figures in Chicago and New Orleans. Ruby claimed he shot Oswald to spare Mrs. Kennedy the pain of a trial. Many find this explanation insufficient.</p>
+
+    <p>On November 29, 1963 — one week after the assassination — President Lyndon Johnson establishes the <span class="vocab-term" data-def="Officially the President's Commission on the Assassination of President Kennedy, commonly known as the Warren Commission after its chairman, Chief Justice Earl Warren. It was established by Executive Order 11130 on November 29, 1963, and tasked with conducting a thorough investigation of the assassination.">Warren Commission</span> by executive order. Its chairman is Chief Justice Earl Warren. Its members include Senator Richard Russell, Senator John Sherman Cooper, Representative Hale Boggs, Representative Gerald Ford, former CIA Director Allen Dulles, and John J. McCloy.</p>
+  `,
+  prompt: "As a Secret Service agent involved from the beginning, which angle do you believe deserves the most investigative attention?",
+  choices: [
+    {
+      label: "A",
+      text: "The Soviet and Cuban connections — Oswald's defection, his pro-Castro activities, and especially the Mexico City trip. If a foreign power was involved, we need to know.",
+      consequence: `<p>The foreign connections are investigated extensively. The CIA provides files on Oswald's Mexico City trip. The FBI interviews Marina Oswald repeatedly about her husband's time in the Soviet Union. Soviet defector Yuri Nosenko will later claim that the KGB considered Oswald unstable and never recruited him — but Nosenko's own credibility is disputed within the CIA.</p>
+      <p>No definitive evidence of foreign government involvement is found. But the investigation reveals troubling gaps: the CIA failed to flag Oswald's Mexico City embassy visits to the Secret Service before the Dallas trip. Information that might have put Oswald on a watch list was never shared between agencies.</p>`,
+      next: "scene9"
+    },
+    {
+      label: "B",
+      text: "The domestic evidence — the ballistics, the rifle, the trajectory analysis, the autopsy. Build an airtight forensic case first.",
+      consequence: `<p>The forensic investigation is painstaking. The FBI laboratory examines every physical artifact: the rifle, the bullets, the fragments, the casings, the paper bag, the fibers, the fingerprints. Ballistics experts test-fire the Mannlicher-Carcano to determine its accuracy and rate of fire. The autopsy photographs and X-rays are reviewed. The trajectory from the sixth-floor window to the limousine is calculated and reconstructed.</p>
+      <p>A critical problem emerges: the <span class="vocab-term" data-def="The theory, developed by Warren Commission assistant counsel Arlen Specter, that a single bullet struck President Kennedy in the upper back, exited his throat, then struck Governor Connally in the back, passed through his chest, shattered his wrist, and lodged in his thigh. This 'single-bullet theory' was necessary to explain all seven wounds with only three shots if there was a single gunman.">single-bullet theory</span>. Three cartridge casings were found, meaning at most three shots were fired. One shot missed entirely. One was the fatal head shot. That leaves one bullet to account for all of President Kennedy's non-fatal wounds AND all five of Governor Connally's wounds. One bullet, seven wounds, two men. The bullet that supposedly did all of this — Commission Exhibit 399 — was found on a stretcher at Parkland Hospital, and it is nearly intact.</p>`,
+      next: "scene9"
+    }
+  ]
+},
+
+// ------ SCENE 9: THE WARREN COMMISSION ------
+scene9: {
+  location: "Washington, D.C.",
+  date: "January – September, 1964",
+  stop: "washington",
+  title: "The Warren Commission",
+  narrative: `
+    <p>You are called to testify before the Warren Commission in Washington, D.C. The hearing room is formal, wood-paneled, quiet. Chief Justice Earl Warren presides. The commission's staff counsel asks you to describe, in precise detail, what you observed on November 22, 1963.</p>
+
+    <figure class="scene-photo">
+      <img src="warren-commission.jpg" alt="The Warren Commission in session">
+      <figcaption>The Warren Commission in session. Chief Justice Earl Warren (center) led the investigation. The commission heard testimony from 552 witnesses and produced a report of 888 pages with 26 volumes of supporting evidence.</figcaption>
+    </figure>
+
+    <p>You testify about the motorcade, the sounds you heard, your response, the crime scene at the Book Depository, the evidence chain. You answer every question as precisely as you can.</p>
+
+    <p>Over the course of ten months, the commission hears testimony from 552 witnesses. It reviews the FBI's investigation, the Secret Service's reports, the autopsy findings, the ballistics analysis, the trajectory studies, and thousands of documents.</p>
+
+    <p>The key conclusions are taking shape:</p>
+
+    <p><strong>The single-bullet theory</strong> is the linchpin. Commission assistant counsel <strong>Arlen Specter</strong> has developed the theory that one bullet — <span class="vocab-term" data-def="Warren Commission Exhibit 399, a nearly intact 6.5mm bullet found on a stretcher at Parkland Hospital. The Warren Commission concluded this single bullet caused seven wounds in two men: entering Kennedy's upper back, exiting his throat, entering Connally's back, exiting his chest, passing through his wrist, and embedding in his thigh. Critics dubbed it the 'magic bullet' because of the complex path it would have had to travel.">CE 399</span> — passed through President Kennedy's upper back and throat, then struck Governor Connally in the back, exited his chest, shattered his wrist, and lodged in his thigh. Seven wounds. One bullet. The bullet was found nearly intact on a stretcher at Parkland.</p>
+
+    <figure class="scene-photo">
+      <img src="ce399.jpg" alt="Commission Exhibit 399, the 'single bullet'">
+      <figcaption>Commission Exhibit 399 — the nearly intact bullet found on a stretcher at Parkland Hospital. The Warren Commission concluded this single bullet caused seven non-fatal wounds in President Kennedy and Governor Connally. Critics called it the "magic bullet."</figcaption>
+    </figure>
+
+    <div class="historical-note">
+      <strong>Historical context:</strong> The single-bullet theory was — and remains — the most controversial element of the Warren Commission's findings. If the theory is wrong, then more than three shots were fired, which means more than one gunman, which means a conspiracy. Supporters argue that the alignment of Kennedy and Connally in the car, and modern ballistics testing, make the single-bullet trajectory physically plausible. Critics argue that a single bullet could not cause that much damage and remain nearly intact, and that the bullet's trajectory requires an improbable path through two bodies.
+    </div>
+
+    <p>Not all commission members are fully convinced. Senator Richard Russell and Representatives Hale Boggs and John Sherman Cooper have expressed private doubts about the single-bullet theory. But the pressure to present a unified conclusion is immense. The nation needs an answer. The world is watching.</p>
+
+    <p>During a private session, a senior commission staff member asks for your assessment.</p>
+  `,
+  prompt: "Based on everything you've investigated, what do you tell the commission?",
+  choices: [
+    {
+      label: "A",
+      text: "\"The physical evidence points to Oswald as the shooter. Whether he acted entirely alone — I believe the evidence supports that conclusion, but I want to note the gaps in our knowledge, particularly regarding his Mexico City contacts.\"",
+      consequence: `<p>The staff counsel nods. "Your concerns about the intelligence gaps are noted. The commission's report will address the question of conspiracy." He pauses. "But the conclusion, based on the weight of the evidence, will be that Oswald acted alone."</p>
+      <p>You think about what you know and what you don't know. The evidence against Oswald is substantial. But "substantial" and "complete" are not the same thing. You have done your job. You have followed the evidence. The commission will render its judgment.</p>`,
+      next: "scene10"
+    },
+    {
+      label: "B",
+      text: "\"I have concerns. The single-bullet theory requires assumptions I'm not fully comfortable with. And there are too many unanswered questions about Oswald's contacts — the Mexico City trip, the intelligence failures, Ruby's access to the basement.\"",
+      consequence: `<p>The staff counsel listens carefully. "Your concerns are shared by several people involved in this investigation," he says. "But the commission must reach a conclusion. The evidence we have — the rifle, the trajectory, the ballistics, the witness testimony — points to Oswald. On the question of conspiracy, we have found no evidence that Oswald was part of a domestic or foreign conspiracy. That doesn't mean one didn't exist. It means we haven't found evidence of one."</p>
+      <p>"Absence of evidence is not evidence of absence," you say.</p>
+      <p>"No," he agrees. "It isn't. But a government commission cannot report speculation. We report what the evidence shows."</p>`,
+      next: "scene10"
+    }
+  ]
+},
+
+// ------ SCENE 10: THE REPORT ------
+scene10: {
+  location: "Washington, D.C.",
+  date: "September 24, 1964",
+  stop: "washington",
+  title: "The Report",
+  narrative: `
+    <p>On September 24, 1964, the Warren Commission delivers its report to President Johnson. It is 888 pages long, supported by 26 volumes of hearings and exhibits.</p>
+
+    <figure class="scene-photo">
+      <img src="warren-report.jpg" alt="The Warren Commission Report">
+      <figcaption>The Warren Commission Report, delivered to President Johnson on September 24, 1964. Its conclusions would be debated for decades.</figcaption>
+    </figure>
+
+    <p>The commission's principal conclusions:</p>
+
+    <p><strong>1.</strong> The shots which killed President Kennedy and wounded Governor Connally were fired from the sixth-floor window at the southeast corner of the Texas School Book Depository.</p>
+
+    <p><strong>2.</strong> Three shots were fired. One missed. One bullet (the "single bullet") wounded both Kennedy and Connally. The third shot struck President Kennedy in the head, killing him.</p>
+
+    <p><strong>3.</strong> The shots were fired by Lee Harvey Oswald.</p>
+
+    <p><strong>4.</strong> Oswald also killed Dallas Police Officer J.D. Tippit.</p>
+
+    <p><strong>5.</strong> The commission found no evidence that either Oswald or Jack Ruby was part of any conspiracy, domestic or foreign, to assassinate President Kennedy.</p>
+
+    <p><strong>6.</strong> The commission found no evidence that Oswald was an agent or informant of any federal agency.</p>
+
+    <div class="historical-note">
+      <strong>Historical context:</strong> The Warren Report was initially accepted by a majority of the American public. But within years, doubts grew. Critics pointed to the single-bullet theory, the contradictory witness accounts, the intelligence failures, the destruction and mishandling of evidence, the inadequate autopsy, and the many unanswered questions about Oswald's connections. By the mid-1970s, public opinion polls showed that a majority of Americans did not believe the Warren Commission's conclusion that Oswald acted alone — a finding that has persisted in every major poll since.
+    </div>
+
+    <p>The report is released to the public. You read it cover to cover. You see your own testimony in the transcripts. You see the evidence you helped gather. You see conclusions that you contributed to.</p>
+
+    <p>The case is officially closed.</p>
+
+    <p>But you know — everyone who worked this case knows — that "closed" and "solved" are not always the same thing.</p>
+  `,
+  prompt: null,
+  choices: [],
+  auto_next: "epilogue"
+},
+
+// ------ EPILOGUE ------
+epilogue: {
+  location: "Epilogue",
+  date: "",
+  stop: "washington",
+  title: "The Questions That Remain",
+  narrative: `
+    <div class="epilogue-section">
+      <p>The Warren Commission closed the case. History did not.</p>
+    </div>
+
+    <div class="epilogue-section">
+      <h3>The Garrison Investigation (1967–1969)</h3>
+      <p>New Orleans District Attorney Jim Garrison launched his own investigation, claiming a conspiracy involving anti-Castro Cuban exiles, CIA operatives, and New Orleans businessman Clay Shaw. Garrison brought Shaw to trial in 1969 — the only criminal trial ever held in connection with the JFK assassination. Shaw was acquitted in less than an hour. Garrison's investigation was widely criticized for its methods, but it raised public awareness of the Warren Commission's shortcomings.</p>
+    </div>
+
+    <div class="epilogue-section">
+      <h3>The Church Committee (1975–1976)</h3>
+      <p>The Senate Select Committee to Study Governmental Operations, chaired by Senator Frank Church, revealed that the CIA had withheld critical information from the Warren Commission — including its own plots to assassinate Cuban leader Fidel Castro, some involving organized crime figures. The committee concluded that U.S. intelligence agencies had failed to share relevant information about Oswald with the Warren Commission.</p>
+    </div>
+
+    <div class="epilogue-section">
+      <h3>The House Select Committee on Assassinations (1976–1979)</h3>
+      <p>Congress reopened the investigation. The <strong>HSCA</strong> conducted its own forensic analysis and reviewed evidence the Warren Commission had not examined. Its most explosive finding came from acoustics analysis of a Dallas police dictabelt recording, which the committee's experts concluded captured <strong>four shots</strong> in Dealey Plaza — one more than the Warren Commission found. If four shots were fired, and Oswald's bolt-action rifle could only fire three in the available time, there had to be a second shooter.</p>
+      <p>The HSCA concluded: <strong>"President John F. Kennedy was probably assassinated as a result of a conspiracy."</strong> However, the committee could not identify the other conspirators. The acoustics evidence was later disputed by the National Academy of Sciences, which concluded the sounds were not gunshots. The debate over the acoustic evidence continues.</p>
+    </div>
+
+    <div class="epilogue-section">
+      <h3>The JFK Records Act (1992)</h3>
+      <p>Following the release of Oliver Stone's film <em>JFK</em> in 1991, public pressure led Congress to pass the President John F. Kennedy Assassination Records Collection Act of 1992. The act required all assassination-related records held by government agencies to be released to the public. The Assassination Records Review Board oversaw the release of millions of pages of previously classified documents. As of 2023, a small number of records remain partially or fully classified, with the National Archives continuing to process releases under executive orders.</p>
+    </div>
+
+    <div class="epilogue-section">
+      <h3>What We Know and What We Don't</h3>
+      <p><strong>What the evidence shows:</strong> Lee Harvey Oswald fired shots from the sixth floor of the Texas School Book Depository. His rifle, his fingerprints, his movements, and the ballistic evidence all point to him as a shooter. He killed Officer Tippit while fleeing. Jack Ruby killed Oswald two days later.</p>
+      <p><strong>What remains debated:</strong> Whether Oswald acted alone. Whether there was a second shooter. What Oswald's true motivations were. What U.S. intelligence agencies knew about Oswald before November 22 and why they failed to act on that knowledge. Why Jack Ruby killed Oswald. Whether Ruby had assistance gaining access to the police basement. What happened during Oswald's Mexico City trip. Why critical evidence was mishandled, lost, or destroyed.</p>
+      <p><strong>What the investigation revealed about government itself:</strong> The JFK assassination exposed catastrophic failures in communication between the FBI, CIA, and Secret Service. It revealed that intelligence agencies withheld information from official investigations. It demonstrated that a presidential commission, even one led by the Chief Justice, could be limited by the information agencies chose to share with it. These revelations fundamentally changed how Americans thought about their government and its institutions.</p>
+    </div>
+
+    <div class="epilogue-section">
+      <h3>The Legacy</h3>
+      <ul>
+        <li><strong>Secret Service reforms:</strong> The assassination led to major changes in presidential security, including stricter motorcade protocols, better coordination with intelligence agencies, and the requirement that buildings along motorcade routes be secured.</li>
+        <li><strong>Federal jurisdiction:</strong> In 1965, Congress made assassinating a president a federal crime, ending the jurisdictional confusion that plagued the Dallas investigation.</li>
+        <li><strong>Intelligence oversight:</strong> The failures revealed by the Church Committee and HSCA led to new oversight mechanisms for the CIA and FBI, including the creation of the Senate and House Intelligence Committees.</li>
+        <li><strong>Public trust:</strong> The assassination and its aftermath — including the Vietnam War revelations and Watergate — contributed to a fundamental erosion of public trust in government institutions that persists to this day. In 1963, 77% of Americans trusted the federal government. By the mid-1970s, that number had collapsed.</li>
+      </ul>
+    </div>
+
+    <div class="epilogue-section">
+      <h3>Why It Matters</h3>
+      <p>The JFK assassination investigation raises questions that go beyond November 22, 1963. It asks: <strong>How do we investigate the most powerful institutions in the world? What happens when the agencies investigating a crime are themselves part of the story? How do we distinguish between healthy skepticism and unfounded conspiracy? And what does a democracy owe its citizens in terms of transparency and truth?</strong></p>
+      <p>No matter what choices you made in this simulation, you arrived at the same place: the Warren Commission's conclusion. That is what happened historically — the official investigation reached a single, definitive answer. But the questions persisted because the investigation itself had limitations that many found unacceptable. The lesson is not that the Warren Commission was necessarily wrong. The lesson is that <em>the process matters as much as the conclusion</em>. An investigation that fails to be thorough, transparent, and independent will never fully earn public trust — regardless of whether its conclusions are correct.</p>
+      <p>The question the JFK case asks every generation is this: <em>When official answers feel incomplete, what is the responsible way to seek the truth?</em></p>
+    </div>
+  `,
+  prompt: null,
+  choices: [],
+  isEpilogue: true
+}
+
+};
+
+// ============================================================
+// GAME ENGINE
+// ============================================================
+const introAudio = document.getElementById('intro-audio');
+function playAudio() {
+  if (introAudio.src) {
+    introAudio.currentTime = 0;
+    introAudio.volume = 0.3;
+    introAudio.play().catch(() => {});
+  }
+}
+
+function playEpilogueAudio() {
+  const container = document.getElementById('epilogue-audio-container');
+  // Only add iframe once
+  if (!container.querySelector('iframe')) {
+    container.innerHTML = '<iframe src="https://www.youtube.com/embed/dmIenyvF4D8?autoplay=1&loop=1&playlist=dmIenyvF4D8" allow="autoplay" style="width:1px;height:1px;border:none;"></iframe>';
+  }
+}
+
+function stopEpilogueAudio() {
+  const container = document.getElementById('epilogue-audio-container');
+  container.innerHTML = '';
+}
+
+function fadeOutAudio(duration = 2000) {
+  if (!introAudio.src || introAudio.paused) return;
+  const step = 50;
+  const volumeStep = introAudio.volume / (duration / step);
+  const fade = setInterval(() => {
+    if (introAudio.volume - volumeStep <= 0) {
+      introAudio.volume = 0;
+      introAudio.pause();
+      introAudio.volume = 0.3;
+      clearInterval(fade);
+    } else {
+      introAudio.volume -= volumeStep;
+    }
+  }, step);
+}
+
+function startGame() {
+  playAudio();
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('map-panel').classList.add('active');
+  document.getElementById('game-container').classList.add('active');
+  renderScene('scene1');
+}
+
+function renderScene(sceneId) {
+  if (state.sceneHistory[state.sceneHistory.length - 1] !== sceneId) {
+    state.sceneHistory.push(sceneId);
+  }
+  state.currentScene = sceneId;
+  const scene = scenes[sceneId];
+  const container = document.getElementById('game-container');
+
+  if (scene.stop) {
+    updateRouteMap(scene.stop, scene.location, scene.date);
+  }
+
+  let html = '<div class="fade-in">';
+
+  if (scene.isEpilogue) {
+    state.reachedEpilogue = true;
+  }
+
+  // Navigation buttons
+  if (sceneId !== 'scene1') {
+    html += `<div class="nav-buttons">`;
+    html += `<button class="back-btn" onclick="goBack()">&larr; Back</button>`;
+    if (state.reachedEpilogue && state.forwardHistory.length > 0) {
+      html += `<button class="back-btn forward-btn" onclick="goForward()">Forward &rarr;</button>`;
+    }
+    html += `</div>`;
+  }
+
+  if (scene.location) {
+    html += `<div class="scene-location">${scene.location}</div>`;
+  }
+  if (scene.date) {
+    html += `<div class="scene-date">${scene.date}</div>`;
+  }
+  if (scene.title) {
+    html += `<div class="scene-title">${scene.title}</div>`;
+  }
+
+  html += `<div class="scene-narrative">${scene.narrative}</div>`;
+
+  if (scene.choices && scene.choices.length > 0) {
+    if (scene.prompt) {
+      html += `<div class="choice-prompt">${scene.prompt}</div>`;
+    }
+    html += '<div class="choices">';
+    scene.choices.forEach((choice, i) => {
+      html += `<button class="choice-btn" onclick="makeChoice('${sceneId}', ${i})">
+        <span class="choice-label">${choice.label}.</span> ${choice.text}
+      </button>`;
+    });
+    html += '</div>';
+  } else if (scene.auto_next) {
+    html += `<button class="continue-btn" onclick="renderScene('${scene.auto_next}')">Continue</button>`;
+  } else if (scene.isEpilogue) {
+    playEpilogueAudio();
+    html += `
+    <div class="reflection-section">
+      <h2>Investigation Debrief</h2>
+      <p class="reflection-intro">Answer the following questions thoughtfully and in complete sentences. When you are finished, enter your name and click "Save as PDF" to download your response for submission.</p>
+
+      <div class="name-field">
+        <label for="student-name">Your Name</label>
+        <input type="text" id="student-name" placeholder="First and Last Name">
+      </div>
+
+      <div class="reflection-field">
+        <label>1. The Warren Commission concluded that Lee Harvey Oswald acted alone. The House Select Committee on Assassinations later concluded there was "probably" a conspiracy. Based on the evidence presented in this simulation, what do you think — and more importantly, what would you need to see to be more confident in your answer?</label>
+        <textarea id="reflection-1" placeholder="Write your response here..."></textarea>
+      </div>
+
+      <div class="reflection-field">
+        <label>2. Multiple government agencies — the FBI, CIA, and Secret Service — failed to share critical information with each other before the assassination. After the assassination, the CIA withheld information from the Warren Commission. Why do you think agencies within the same government would withhold information from each other? What does this tell you about how large institutions actually work?</label>
+        <textarea id="reflection-2" placeholder="Write your response here..."></textarea>
+      </div>
+
+      <div class="reflection-field">
+        <label>3. No matter what investigative choices you made in this simulation, you arrived at the Warren Commission's conclusion. What does that tell you about the difference between an individual investigator's doubts and an institution's official findings? When official conclusions and public doubt diverge, what is the responsible way for citizens to seek answers?</label>
+        <textarea id="reflection-3" placeholder="Write your response here..."></textarea>
+      </div>
+
+      <div class="reflection-actions">
+        <button class="save-pdf-btn" onclick="savePDF()">Save as PDF</button>
+        <button class="restart-btn" onclick="restartGame()">Start Over</button>
+      </div>
+      <p class="pdf-note">Your PDF will include your name, your responses, and the investigative choices you made during the simulation.</p>
+    </div>`;
+  }
+
+  html += '</div>';
+  container.innerHTML = html;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function makeChoice(sceneId, choiceIndex) {
+  const scene = scenes[sceneId];
+  const choice = scene.choices[choiceIndex];
+
+  if (state.decisions.length === 0) {
+    fadeOutAudio();
+  }
+
+  state.decisions.push({ scene: sceneId, choice: choice.label });
+
+  if (choice.effect) choice.effect();
+
+  // Show incident report modal after scene 3 (the shooting)
+  if (sceneId === 'scene3') {
+    state._pendingChoice = choice;
+    showReportModal();
+    return;
+  }
+
+  applyChoice(choice);
+}
+
+function applyChoice(choice) {
+  const container = document.getElementById('game-container');
+  const choicesEl = container.querySelector('.choices');
+  if (choicesEl) {
+    let consequenceHtml = `<div class="consequence fade-in">${choice.consequence}</div>`;
+    consequenceHtml += `<button class="continue-btn fade-in" onclick="renderScene('${choice.next}')">Continue</button>`;
+    choicesEl.outerHTML = consequenceHtml;
+
+    const promptEl = container.querySelector('.choice-prompt');
+    if (promptEl) promptEl.style.display = 'none';
+  }
+}
+
+function showReportModal() {
+  document.getElementById('report-overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function submitReport() {
+  const signature = document.getElementById('report-agent-name').value.trim();
+  if (!signature) {
+    alert('You must enter your name to file this report.');
+    document.getElementById('report-agent-name').focus();
+    return;
+  }
+
+  state.report = {
+    agentName: document.getElementById('report-agent-name').value.trim(),
+    badgeNumber: document.getElementById('report-badge').value.trim(),
+    shotsHeard: document.getElementById('report-shots').value.trim(),
+    shotsDirection: document.getElementById('report-direction').value.trim(),
+    observations: document.getElementById('report-observations').value.trim(),
+    immediateActions: document.getElementById('report-actions').value.trim()
+  };
+
+  document.getElementById('report-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+
+  // After filing the report, show the CBS broadcast announcement
+  showBroadcastModal();
+}
+
+function showBroadcastModal() {
+  const iframe = document.getElementById('broadcast-iframe');
+  iframe.src = 'https://www.cbsnews.com/video/cbs-news-announces-presidents-death/';
+  document.getElementById('broadcast-overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeBroadcastModal() {
+  const iframe = document.getElementById('broadcast-iframe');
+  iframe.src = ''; // Stop playback
+  document.getElementById('broadcast-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+
+  // Now continue with the pending choice from scene 3
+  if (state._pendingChoice) {
+    applyChoice(state._pendingChoice);
+    state._pendingChoice = null;
+  }
+}
+
+function goBack() {
+  if (state.sceneHistory.length > 1) {
+    const currentScene = state.sceneHistory.pop();
+    state.forwardHistory.push(currentScene);
+    const prevScene = state.sceneHistory[state.sceneHistory.length - 1];
+    renderScene(prevScene);
+  }
+}
+
+function goForward() {
+  if (state.forwardHistory.length > 0) {
+    const nextScene = state.forwardHistory.pop();
+    state.sceneHistory.push(nextScene);
+    renderScene(nextScene);
+  }
+}
+
+function openEvidenceModal() {
+  document.getElementById('evidence-overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEvidenceModal() {
+  document.getElementById('evidence-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function restartGame() {
+  introAudio.pause();
+  introAudio.currentTime = 0;
+  stopEpilogueAudio();
+
+  state.currentScene = null;
+  state.approachChoice = null;
+  state.decisions = [];
+  state.visitedStops = [];
+  state.sceneHistory = [];
+  state.forwardHistory = [];
+  state.reachedEpilogue = false;
+  state.report = null;
+
+  document.getElementById('map-panel').classList.remove('active');
+  document.getElementById('game-container').classList.remove('active');
+  document.getElementById('game-container').innerHTML = '';
+  document.getElementById('title-screen').style.display = 'flex';
+
+  document.querySelectorAll('.city-dot-outer').forEach(d => d.classList.remove('visited', 'current'));
+  document.querySelectorAll('.city-label').forEach(l => l.classList.remove('visited', 'current'));
+  document.querySelectorAll('.pulse-ring').forEach(r => r.classList.remove('active'));
+  document.querySelectorAll('.danger-icon').forEach(d => d.classList.remove('visible'));
+  document.getElementById('callout-location').textContent = '';
+  document.getElementById('callout-date').textContent = '';
+
+  window.scrollTo({ top: 0 });
+}
+
+// ============================================================
+// PDF GENERATION
+// ============================================================
+function savePDF() {
+  const name = document.getElementById('student-name').value.trim();
+  const r1 = document.getElementById('reflection-1').value.trim();
+  const r2 = document.getElementById('reflection-2').value.trim();
+  const r3 = document.getElementById('reflection-3').value.trim();
+
+  if (!name) {
+    alert('Please enter your name before saving.');
+    document.getElementById('student-name').focus();
+    return;
+  }
+
+  if (!r1 || !r2 || !r3) {
+    alert('Please answer all three reflection questions before saving.');
+    return;
+  }
+
+  const choiceLabels = {
+    scene1: 'Scene 1 — The Assignment',
+    scene2: 'Scene 2 — The Motorcade',
+    scene3: 'Scene 3 — Dealey Plaza',
+    scene4: 'Scene 4 — Parkland Hospital',
+    scene5: 'Scene 5 — The Sixth Floor',
+    scene7: 'Scene 7 — 48 Hours',
+    scene8: 'Scene 8 — The Investigation',
+    scene9: 'Scene 9 — Warren Commission'
+  };
+
+  let choicesHtml = '';
+  state.decisions.forEach(d => {
+    const label = choiceLabels[d.scene] || d.scene;
+    choicesHtml += `<tr><td style="padding:4px 12px 4px 0;font-weight:600;white-space:nowrap">${label}</td><td style="padding:4px 0">Choice ${d.choice}</td></tr>`;
+  });
+
+  if (state.approachChoice) {
+    choicesHtml += `<tr><td style="padding:4px 12px 4px 0;font-weight:600">Initial Response</td><td style="padding:4px 0">${state.approachChoice === 'depository' ? 'Went to Book Depository' : 'Went to Parkland Hospital'}</td></tr>`;
+  }
+
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+<title>JFK Investigation Debrief — ${name}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Source Sans Pro', Arial, sans-serif;
+    color: #1a1a1a;
+    padding: 0.5in 0.75in;
+    line-height: 1.6;
+    font-size: 11pt;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #1a2a4a;
+  }
+  .header h1 {
+    font-size: 20pt;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #1a2a4a;
+    margin-bottom: 2px;
+  }
+  .header .sub {
+    font-size: 10pt;
+    color: #8b0000;
+    font-weight: 600;
+  }
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-size: 10pt;
+  }
+  .meta-label { font-weight: 700; color: #1a2a4a; }
+  h2 {
+    font-size: 13pt;
+    color: #1a2a4a;
+    margin: 20px 0 10px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #ddd;
+  }
+  .question { margin-bottom: 18px; }
+  .question .q-label { font-weight: 700; font-size: 10pt; color: #1a2a4a; margin-bottom: 4px; }
+  .question .q-text { font-size: 10pt; margin-bottom: 6px; color: #444; font-style: italic; }
+  .question .answer { font-size: 11pt; line-height: 1.7; padding: 8px 0; white-space: pre-wrap; }
+  table { font-size: 10pt; border-collapse: collapse; }
+  .footer {
+    margin-top: 30px;
+    padding-top: 12px;
+    border-top: 1px solid #ddd;
+    font-size: 8pt;
+    color: #999;
+    text-align: center;
+  }
+  @media print { body { padding: 0; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>JFK: November 1963</h1>
+  <div class="sub">Investigation Debrief</div>
+</div>
+<div class="meta">
+  <div><span class="meta-label">Student:</span> ${name}</div>
+  <div><span class="meta-label">Date:</span> ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+</div>
+<h2>Investigation Choices</h2>
+<table>${choicesHtml}</table>
+
+${state.report ? `
+<h2>Preliminary Incident Report</h2>
+<div style="font-size:10pt;line-height:1.6;padding:12px;border:1px solid #ddd;background:#faf8f3;margin-bottom:16px">
+  <p><strong>Agent:</strong> ${state.report.agentName} &nbsp;&nbsp; <strong>Badge:</strong> ${state.report.badgeNumber || 'N/A'}</p>
+  <p><strong>Shots Heard:</strong> ${state.report.shotsHeard || 'N/A'} &nbsp;&nbsp; <strong>Direction:</strong> ${state.report.shotsDirection || 'N/A'}</p>
+  ${state.report.observations ? `<p><strong>Observations:</strong> ${state.report.observations}</p>` : ''}
+  ${state.report.immediateActions ? `<p><strong>Immediate Actions:</strong> ${state.report.immediateActions}</p>` : ''}
+</div>
+` : ''}
+
+<h2>Reflection Questions</h2>
+<div class="question">
+  <div class="q-label">Question 1</div>
+  <div class="q-text">The Warren Commission concluded that Lee Harvey Oswald acted alone. The HSCA later concluded there was "probably" a conspiracy. Based on the evidence, what do you think — and what would you need to see to be more confident?</div>
+  <div class="answer">${r1}</div>
+</div>
+<div class="question">
+  <div class="q-label">Question 2</div>
+  <div class="q-text">Multiple government agencies failed to share critical information before and after the assassination. Why do you think agencies within the same government would withhold information from each other?</div>
+  <div class="answer">${r2}</div>
+</div>
+<div class="question">
+  <div class="q-label">Question 3</div>
+  <div class="q-text">No matter what choices you made, you arrived at the Warren Commission's conclusion. What does that tell you about official conclusions vs. public doubt?</div>
+  <div class="answer">${r3}</div>
+</div>
+<div class="footer">
+  JFK: November 1963 — Historical Simulation for 9th Grade U.S. History
+</div>
+</body>
+</html>`);
+
+  printWindow.document.close();
+  setTimeout(() => { printWindow.print(); }, 600);
+}
+</script>
+
+<!-- Incident Report Modal -->
+<div class="report-overlay" id="report-overlay">
+  <div class="report-modal">
+    <h2>Preliminary Incident Report</h2>
+    <div class="report-subtitle">United States Secret Service — White House Detail</div>
+    <div class="report-classification">CLASSIFICATION: PRIORITY — EYES ONLY</div>
+
+    <div class="report-intro">
+      Following the events in Dealey Plaza, all agents present are required to file an immediate preliminary incident report documenting their observations. Complete this form to the best of your ability. Accuracy is critical — this document will become part of the official investigation record.
+      <br><br><em style="font-size:0.85em;color:#888;">Note: This is an educational simulation. However, Secret Service agents were required to file written reports of their observations. Many of these actual reports became key evidence reviewed by the Warren Commission.</em>
+    </div>
+
+    <div class="report-field">
+      <label for="report-agent-name">Agent Name</label>
+      <input type="text" id="report-agent-name" placeholder="Your full name">
+    </div>
+
+    <div class="report-field">
+      <label for="report-badge">Badge / ID Number</label>
+      <input type="text" id="report-badge" placeholder="Assign yourself a badge number">
+    </div>
+
+    <div class="report-field">
+      <label for="report-shots">How many shots did you hear?</label>
+      <input type="text" id="report-shots" placeholder="Number of shots">
+    </div>
+
+    <div class="report-field">
+      <label for="report-direction">What direction did the shots appear to come from?</label>
+      <textarea id="report-direction" placeholder="Describe the apparent direction/origin of the shots as best you can (e.g., 'behind and above the motorcade,' 'from the right front,' etc.)"></textarea>
+    </div>
+
+    <div class="report-field">
+      <label for="report-observations">Describe what you observed immediately before, during, and after the shots.</label>
+      <textarea id="report-observations" placeholder="Include details about the motorcade position, crowd behavior, what you saw in the presidential limousine, and any other observations..."></textarea>
+    </div>
+
+    <div class="report-field">
+      <label for="report-actions">What immediate actions did you take?</label>
+      <textarea id="report-actions" placeholder="Describe your response to the shots — where you went, what you did, who you contacted..."></textarea>
+    </div>
+
+    <div class="legal-text">
+      I certify that the information provided in this report is accurate and complete to the best of my knowledge and recollection. I understand that this document will be entered into the official investigation record and may be reviewed by the investigating commission.
+    </div>
+
+    <button class="report-submit-btn" onclick="submitReport()">File Report</button>
+  </div>
+</div>
+
+<!-- CBS Broadcast Modal -->
+<div class="broadcast-overlay" id="broadcast-overlay">
+  <div class="broadcast-modal">
+    <h2>CBS News Bulletin</h2>
+    <div class="broadcast-dateline">November 22, 1963 — 2:38 p.m. EST</div>
+    <p class="broadcast-subtitle">Walter Cronkite interrupts CBS programming to announce the death of President Kennedy. This is the broadcast that told America its president was gone.</p>
+    <div class="broadcast-frame">
+      <iframe src="" id="broadcast-iframe" allowfullscreen allow="fullscreen"></iframe>
+    </div>
+    <button class="broadcast-close-btn" onclick="closeBroadcastModal()">Continue</button>
+  </div>
+</div>
+
+<!-- Evidence Modal (for expandable primary sources in epilogue) -->
+<div class="evidence-overlay" id="evidence-overlay" onclick="if(event.target===this)closeEvidenceModal()">
+  <div class="evidence-modal">
+    <h2>Key Evidence Summary</h2>
+    <p style="text-align:center;font-style:italic;color:#666;margin-bottom:1.2rem">Select evidence items examined during the investigation</p>
+
+    <h3>The Rifle — Commission Exhibit 139</h3>
+    <p>A 6.5mm Mannlicher-Carcano bolt-action rifle, serial number C2766, purchased by mail order from Klein's Sporting Goods in Chicago. The order form was in the name "A. Hidell," an alias used by Oswald. The rifle was shipped to a P.O. Box rented by Oswald. A palm print matching Oswald's was found on the barrel.</p>
+
+    <h3>The "Single Bullet" — Commission Exhibit 399</h3>
+    <p>A nearly intact 6.5mm bullet found on a stretcher at Parkland Hospital. The Warren Commission concluded this single bullet caused the non-fatal wounds to both President Kennedy and Governor Connally. Its relatively undamaged condition, despite allegedly causing seven wounds, became one of the most debated pieces of evidence.</p>
+
+    <h3>The Backyard Photographs</h3>
+    <p>Photographs taken by Marina Oswald in March 1963, showing Oswald in his backyard holding the Mannlicher-Carcano rifle, wearing a holstered pistol, and holding two socialist newspapers. Oswald claimed the photographs were faked. Multiple forensic analyses have concluded they are authentic.</p>
+
+    <h3>The Zapruder Film</h3>
+    <p>Abraham Zapruder, a Dallas dressmaker, filmed the motorcade with his 8mm Bell & Howell camera from a concrete pedestal in Dealey Plaza. His 26.6-second film captured the assassination in graphic detail and became the most important visual evidence of the event. Frame 313 shows the fatal head shot.</p>
+
+    <button class="evidence-close-btn" onclick="closeEvidenceModal()">Close</button>
+  </div>
+</div>
+
+</body>
+</html>
