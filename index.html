@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JFK: November 1963</title>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+Pro:wght@400;600;700&display=swap');
 
@@ -92,7 +94,7 @@
     position: relative;
     z-index: 100;
     display: none;
-    background: #d0cdc4;
+    background: #1a1a2e;
     border-bottom: 3px solid var(--accent);
     overflow: hidden;
   }
@@ -103,73 +105,106 @@
     position: relative;
     max-width: 1000px;
     margin: 0 auto;
-    height: 420px;
+    height: 500px;
     overflow: hidden;
-    background: #c8cdd5;
+    background: #1a1a2e;
     transition: height 0.4s ease;
   }
 
-  .map-svg {
+  #mapbox-container {
     width: 100%;
     height: 100%;
   }
 
-  /* City markers */
-  .city-dot-outer {
-    fill: none;
-    stroke: none;
-    transition: all 0.4s;
+  /* Mapbox marker styles */
+  .mapbox-marker {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(40, 40, 60, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: background 0.4s ease, border 0.4s ease, box-shadow 0.4s ease;
+    position: relative;
   }
 
-  .city-dot-outer.visited {
-    fill: rgba(26, 42, 74, 0.15);
-    stroke: var(--blue);
-    stroke-width: 2;
+  .mapbox-marker.visited {
+    background: var(--blue);
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 6px rgba(26, 42, 74, 0.5);
   }
 
-  .city-dot-outer.current {
-    fill: none;
-    stroke: #b71c1c;
-    stroke-width: 5;
-    filter: drop-shadow(0 0 12px rgba(183,28,28,0.9));
+  .mapbox-marker.current {
+    background: #b71c1c;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 12px rgba(183, 28, 28, 0.8), 0 0 24px rgba(183, 28, 28, 0.4);
+    animation: markerPulse 2s ease-in-out infinite;
   }
 
-  .city-dot-inner {
-    fill: transparent;
-    transition: all 0.4s;
+  @keyframes markerPulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(183, 28, 28, 0.8), 0 0 24px rgba(183, 28, 28, 0.4); }
+    50% { box-shadow: 0 0 20px rgba(183, 28, 28, 1), 0 0 40px rgba(183, 28, 28, 0.6); }
   }
 
-  .city-dot-outer.visited .city-dot-inner {
-    fill: var(--blue);
-  }
-
-  .city-dot-outer.current .city-dot-inner {
-    fill: #b71c1c;
-  }
-
-  .city-label {
+  .mapbox-marker-label {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 4px;
     font-family: 'Source Sans Pro', sans-serif;
-    font-size: 11px;
-    fill: #333;
+    font-size: 10px;
     font-weight: 600;
-    text-anchor: middle;
-    opacity: 0.5;
-    transition: opacity 0.4s;
+    color: rgba(255, 255, 255, 0.4);
+    white-space: nowrap;
+    text-align: center;
+    pointer-events: none;
+    transition: color 0.4s;
   }
 
-  .city-label.visited,
-  .city-label.current {
-    opacity: 1;
-    fill: #1a1a1a;
+  .mapbox-marker.visited .mapbox-marker-label,
+  .mapbox-marker.current .mapbox-marker-label {
+    color: rgba(255, 255, 255, 0.9);
   }
 
-  /* Danger markers */
-  .danger-icon {
+  /* Danger markers on Mapbox */
+  .mapbox-danger-marker {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
     opacity: 0;
     transition: opacity 0.6s;
+    pointer-events: none;
   }
 
-  .danger-icon.visible { opacity: 1; }
+  .mapbox-danger-marker.visible {
+    opacity: 1;
+    animation: dangerPulse 1.5s ease-in-out infinite;
+  }
+
+  .mapbox-danger-marker.danger-explosion {
+    background: radial-gradient(circle, rgba(255, 60, 0, 0.9), rgba(183, 28, 28, 0.7));
+    box-shadow: 0 0 16px rgba(255, 60, 0, 0.6);
+  }
+
+  .mapbox-danger-marker.danger-gunshot {
+    background: radial-gradient(circle, rgba(200, 0, 0, 0.9), rgba(100, 0, 0, 0.7));
+    box-shadow: 0 0 16px rgba(200, 0, 0, 0.6);
+  }
+
+  .mapbox-danger-marker.danger-warning {
+    background: radial-gradient(circle, rgba(255, 180, 0, 0.9), rgba(200, 120, 0, 0.7));
+    box-shadow: 0 0 16px rgba(255, 180, 0, 0.6);
+  }
+
+  @keyframes dangerPulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(255, 60, 0, 0.6); }
+    50% { box-shadow: 0 0 24px rgba(255, 60, 0, 1), 0 0 40px rgba(255, 60, 0, 0.5); }
+  }
 
   /* Map legend */
   .map-legend {
@@ -180,12 +215,13 @@
     gap: 16px;
     font-family: 'Source Sans Pro', sans-serif;
     font-size: 0.65rem;
-    color: rgba(26,26,26,0.7);
+    color: rgba(255,255,255,0.7);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    background: rgba(236,234,228,0.8);
+    background: rgba(0,0,0,0.6);
     padding: 4px 10px;
     border-radius: 3px;
+    z-index: 10;
   }
 
   .legend-item {
@@ -210,39 +246,25 @@
     right: 14px;
     font-family: 'Source Sans Pro', sans-serif;
     text-align: right;
+    z-index: 10;
   }
 
   .callout-location {
     font-size: 0.9rem;
     font-weight: 700;
-    color: #7f0000;
+    color: #ff4444;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    text-shadow: 0 1px 2px rgba(236,234,228,0.8);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
   }
 
   .callout-date {
     font-size: 0.7rem;
-    color: rgba(26,26,26,0.7);
+    color: rgba(255,255,255,0.7);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
   }
 
-  /* Pulse animation */
-  @keyframes pulse {
-    0% { r: 14; opacity: 0.6; }
-    50% { r: 28; opacity: 0; }
-    100% { r: 14; opacity: 0; }
-  }
-
-  .pulse-ring {
-    fill: none;
-    stroke: #b71c1c;
-    stroke-width: 3;
-    opacity: 0;
-  }
-
-  .pulse-ring.active {
-    animation: pulse 2s ease-in-out infinite;
-  }
+  /* (Pulse animation handled by Mapbox marker CSS above) */
 
   /* ===== MAIN CONTENT ===== */
   #game-container {
@@ -874,7 +896,7 @@
   @media (max-width: 700px) {
     #title-screen h1 { font-size: 2.2rem; }
     #title-screen .subtitle { font-size: 1rem; }
-    .map-wrapper { height: 280px; }
+    .map-wrapper { height: 320px; }
     .map-callout { display: none; }
     .map-legend { display: none; }
     #game-container { padding: 1.5rem 1rem 3rem; }
@@ -905,143 +927,7 @@
 <!-- ===== MAP PANEL ===== -->
 <div id="map-panel">
   <div class="map-wrapper">
-    <svg class="map-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
-      <defs>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="3" result="blur"/>
-          <feMerge>
-            <feMergeNode in="blur"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-      </defs>
-
-      <!-- Map background: streets and area labels drawn in SVG -->
-      <!-- Dallas area grid -->
-      <rect x="0" y="0" width="1000" height="600" fill="#c8cdd5"/>
-
-      <!-- Major road grid -->
-      <g stroke="#a8aeb8" stroke-width="1" fill="none">
-        <!-- Horizontal streets -->
-        <line x1="0" y1="100" x2="1000" y2="100"/>
-        <line x1="0" y1="200" x2="1000" y2="200"/>
-        <line x1="0" y1="300" x2="1000" y2="300"/>
-        <line x1="0" y1="400" x2="1000" y2="400"/>
-        <line x1="0" y1="500" x2="1000" y2="500"/>
-        <!-- Vertical streets -->
-        <line x1="100" y1="0" x2="100" y2="600"/>
-        <line x1="250" y1="0" x2="250" y2="600"/>
-        <line x1="400" y1="0" x2="400" y2="600"/>
-        <line x1="550" y1="0" x2="550" y2="600"/>
-        <line x1="700" y1="0" x2="700" y2="600"/>
-        <line x1="850" y1="0" x2="850" y2="600"/>
-      </g>
-
-      <!-- Major roads (thicker) -->
-      <g stroke="#8a9099" stroke-width="3" fill="none">
-        <!-- Stemmons Freeway (diagonal, NW to center) -->
-        <path d="M 100,50 L 300,250 L 350,300"/>
-        <!-- Elm Street through Dealey Plaza -->
-        <path d="M 550,220 L 350,250 L 300,260"/>
-        <!-- Main Street -->
-        <path d="M 550,260 L 350,280 L 300,290"/>
-        <!-- Commerce Street -->
-        <path d="M 550,300 L 350,310 L 300,320"/>
-        <!-- Houston Street (N-S through Dealey) -->
-        <line x1="400" y1="150" x2="400" y2="400"/>
-        <!-- Beckley Ave (to Oak Cliff) -->
-        <path d="M 300,320 L 200,450 L 150,520"/>
-        <!-- Jefferson Blvd -->
-        <line x1="50" y1="480" x2="400" y2="480"/>
-      </g>
-
-      <!-- Area labels -->
-      <text x="750" y="80" font-family="'Source Sans Pro', sans-serif" font-size="14" fill="#666" font-weight="600" text-anchor="middle" letter-spacing="0.15em">LOVE FIELD</text>
-      <text x="400" y="170" font-family="'Source Sans Pro', sans-serif" font-size="11" fill="#888" font-weight="600" text-anchor="middle" letter-spacing="0.1em">DOWNTOWN DALLAS</text>
-      <text x="200" y="430" font-family="'Source Sans Pro', sans-serif" font-size="11" fill="#888" font-weight="600" text-anchor="middle" letter-spacing="0.1em">OAK CLIFF</text>
-
-      <!-- Motorcade route (dashed) -->
-      <path d="M 750,100 L 600,180 L 480,200 L 410,220 L 390,250 L 350,270"
-            stroke="var(--gold)" stroke-width="2.5" stroke-dasharray="8,4" fill="none" opacity="0.7"/>
-
-      <!-- Danger markers -->
-      <g class="danger-icon" id="danger-dealey">
-        <text x="370" y="240" font-size="22" text-anchor="middle" style="filter:url(#glow)">&#x1F4A5;</text>
-      </g>
-      <g class="danger-icon" id="danger-tippit">
-        <text x="220" y="470" font-size="20" text-anchor="middle" style="filter:url(#glow)">&#x1F52B;</text>
-      </g>
-      <g class="danger-icon" id="danger-ruby">
-        <text x="520" y="350" font-size="20" text-anchor="middle" style="filter:url(#glow)">&#x26A0;</text>
-      </g>
-
-      <!-- City markers layer -->
-      <g id="cities-layer">
-        <!-- Love Field -->
-        <g class="city-group" data-city="lovefield">
-          <circle class="pulse-ring" cx="750" cy="100" r="18"/>
-          <circle class="city-dot-outer" cx="750" cy="100" r="16" data-city="lovefield"/>
-          <circle class="city-dot-inner" cx="750" cy="100" r="5"/>
-        </g>
-        <text class="city-label" data-city="lovefield" x="750" y="130">Love Field</text>
-
-        <!-- Dealey Plaza / TSBD -->
-        <g class="city-group" data-city="dealey">
-          <circle class="pulse-ring" cx="380" cy="250" r="18"/>
-          <circle class="city-dot-outer" cx="380" cy="250" r="16" data-city="dealey"/>
-          <circle class="city-dot-inner" cx="380" cy="250" r="5"/>
-        </g>
-        <text class="city-label" data-city="dealey" x="380" y="225">Dealey Plaza</text>
-
-        <!-- Parkland Hospital -->
-        <g class="city-group" data-city="parkland">
-          <circle class="pulse-ring" cx="200" cy="150" r="18"/>
-          <circle class="city-dot-outer" cx="200" cy="150" r="16" data-city="parkland"/>
-          <circle class="city-dot-inner" cx="200" cy="150" r="5"/>
-        </g>
-        <text class="city-label" data-city="parkland" x="200" y="140">Parkland Hospital</text>
-
-        <!-- TSBD (6th Floor) -->
-        <g class="city-group" data-city="tsbd">
-          <circle class="pulse-ring" cx="410" cy="220" r="18"/>
-          <circle class="city-dot-outer" cx="410" cy="220" r="16" data-city="tsbd"/>
-          <circle class="city-dot-inner" cx="410" cy="220" r="5"/>
-        </g>
-        <text class="city-label" data-city="tsbd" x="410" y="205">Book Depository</text>
-
-        <!-- Dallas Police HQ -->
-        <g class="city-group" data-city="dallaspd">
-          <circle class="pulse-ring" cx="520" cy="340" r="18"/>
-          <circle class="city-dot-outer" cx="520" cy="340" r="16" data-city="dallaspd"/>
-          <circle class="city-dot-inner" cx="520" cy="340" r="5"/>
-        </g>
-        <text class="city-label" data-city="dallaspd" x="520" y="370">Dallas Police HQ</text>
-
-        <!-- Tippit shooting (10th & Patton) -->
-        <g class="city-group" data-city="tippit">
-          <circle class="pulse-ring" cx="220" cy="480" r="18"/>
-          <circle class="city-dot-outer" cx="220" cy="480" r="16" data-city="tippit"/>
-          <circle class="city-dot-inner" cx="220" cy="480" r="5"/>
-        </g>
-        <text class="city-label" data-city="tippit" x="220" y="510">10th &amp; Patton</text>
-
-        <!-- Texas Theatre -->
-        <g class="city-group" data-city="theatre">
-          <circle class="pulse-ring" cx="150" cy="480" r="18"/>
-          <circle class="city-dot-outer" cx="150" cy="480" r="16" data-city="theatre"/>
-          <circle class="city-dot-inner" cx="150" cy="480" r="5"/>
-        </g>
-        <text class="city-label" data-city="theatre" x="150" y="510">Texas Theatre</text>
-
-        <!-- Washington D.C. (Warren Commission) -->
-        <g class="city-group" data-city="washington">
-          <circle class="pulse-ring" cx="900" cy="520" r="18"/>
-          <circle class="city-dot-outer" cx="900" cy="520" r="16" data-city="washington"/>
-          <circle class="city-dot-inner" cx="900" cy="520" r="5"/>
-        </g>
-        <text class="city-label" data-city="washington" x="900" y="550">Washington, D.C.</text>
-      </g>
-    </svg>
+    <div id="mapbox-container"></div>
 
     <!-- Map callout -->
     <div class="map-callout">
@@ -1087,22 +973,192 @@ const state = {
 // ============================================================
 const stopOrder = ['lovefield', 'dealey', 'parkland', 'tsbd', 'dallaspd', 'tippit', 'theatre', 'washington'];
 
-const cityPositions = {
-  lovefield:  { x: 750, y: 100, label: "Love Field, Dallas" },
-  dealey:     { x: 380, y: 250, label: "Dealey Plaza, Dallas" },
-  parkland:   { x: 200, y: 150, label: "Parkland Memorial Hospital" },
-  tsbd:       { x: 410, y: 220, label: "TX School Book Depository" },
-  dallaspd:   { x: 520, y: 340, label: "Dallas Police Headquarters" },
-  tippit:     { x: 220, y: 480, label: "10th & Patton, Oak Cliff" },
-  theatre:    { x: 150, y: 480, label: "Texas Theatre, Oak Cliff" },
-  washington: { x: 900, y: 520, label: "Washington, D.C." }
+const mapLocations = {
+  lovefield:  { lng: -96.8358, lat: 32.8481, label: "Love Field" },
+  dealey:     { lng: -96.8083, lat: 32.7789, label: "Dealey Plaza" },
+  parkland:   { lng: -96.8373, lat: 32.8119, label: "Parkland Hospital" },
+  tsbd:       { lng: -96.8083, lat: 32.7802, label: "Book Depository" },
+  dallaspd:   { lng: -96.7967, lat: 32.7815, label: "Dallas Police HQ" },
+  tippit:     { lng: -96.8281, lat: 32.7396, label: "10th & Patton" },
+  theatre:    { lng: -96.8319, lat: 32.7419, label: "Texas Theatre" },
+  washington: { lng: -77.0091, lat: 38.8976, label: "Washington, D.C." }
 };
 
+const motorcadeRoute = [
+  [-96.8358, 32.8481],
+  [-96.8320, 32.8400],
+  [-96.8200, 32.8200],
+  [-96.8000, 32.7900],
+  [-96.7980, 32.7850],
+  [-96.8040, 32.7810],
+  [-96.8083, 32.7789],
+];
+
 const dangerTriggers = {
-  dealey: 'danger-dealey',
-  tippit: 'danger-tippit',
-  dallaspd: 'danger-ruby'
+  dealey: { lng: -96.8083, lat: 32.7789, type: 'danger-explosion', icon: '\u2716' },
+  tippit: { lng: -96.8281, lat: 32.7396, type: 'danger-gunshot', icon: '\u2022' },
+  dallaspd: { lng: -96.7967, lat: 32.7815, type: 'danger-warning', icon: '\u26A0' }
 };
+
+// Mapbox state
+let mapboxMap = null;
+let mapboxMarkers = {};
+let mapboxDangerMarkers = {};
+let mapboxInitialized = false;
+
+// Map the motorcade route stops to indices for progressive reveal
+const motorcadeStopIndices = {
+  lovefield: 0,
+  dealey: 6
+};
+
+function initMapbox() {
+  if (mapboxInitialized) return;
+  mapboxInitialized = true;
+
+  mapboxgl.accessToken = 'pk.eyJ1IjoiYmFlc2VyIiwiYSI6ImNtbjh5a3hwaTAzMzkyd3ExMXF2ZWlwdWYifQ.lm_CGFr5rvTYNKb3_aG_Xg';
+
+  mapboxMap = new mapboxgl.Map({
+    container: 'mapbox-container',
+    style: 'mapbox://styles/mapbox/dark-v11',
+    center: [-96.81, 32.79],
+    zoom: 11.5,
+    scrollZoom: false,
+    attributionControl: false
+  });
+
+  mapboxMap.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
+
+  // Enable scroll zoom on click
+  mapboxMap.on('click', () => { mapboxMap.scrollZoom.enable(); });
+
+  // Ensure proper sizing after container becomes visible
+  requestAnimationFrame(() => {
+    mapboxMap.resize();
+  });
+
+  mapboxMap.on('style.load', () => {
+    // Add motorcade route source (initially empty - will be progressively revealed)
+    mapboxMap.addSource('motorcade-route', {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: []
+        }
+      }
+    });
+
+    // Motorcade route layer - gold dashed line
+    mapboxMap.addLayer({
+      id: 'motorcade-route-line',
+      type: 'line',
+      source: 'motorcade-route',
+      paint: {
+        'line-color': '#b8960c',
+        'line-width': 3,
+        'line-dasharray': [2, 1.5],
+        'line-opacity': 0.8
+      }
+    });
+
+    // Add location markers
+    Object.entries(mapLocations).forEach(([key, loc]) => {
+      const el = document.createElement('div');
+      el.className = 'mapbox-marker';
+      el.setAttribute('data-city', key);
+
+      const label = document.createElement('div');
+      label.className = 'mapbox-marker-label';
+      label.textContent = loc.label;
+      el.appendChild(label);
+
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+        .setLngLat([loc.lng, loc.lat])
+        .addTo(mapboxMap);
+
+      mapboxMarkers[key] = { marker, element: el };
+    });
+
+    // Create danger markers (hidden initially)
+    Object.entries(dangerTriggers).forEach(([key, info]) => {
+      const el = document.createElement('div');
+      el.className = `mapbox-danger-marker ${info.type}`;
+      el.textContent = info.icon;
+
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+        .setLngLat([info.lng, info.lat])
+        .addTo(mapboxMap);
+
+      mapboxDangerMarkers[key] = { marker, element: el };
+    });
+
+    // If there's already a current stop (e.g. scene was already rendered), update
+    if (state.visitedStops.length > 0) {
+      const lastStop = state.visitedStops[state.visitedStops.length - 1];
+      updateMapboxMarkers(lastStop);
+      // Fly to the current stop now that the map is loaded
+      const loc = mapLocations[lastStop];
+      if (loc) {
+        const zoom = lastStop === 'washington' ? 12 : 12.5;
+        mapboxMap.flyTo({ center: [loc.lng, loc.lat], zoom: zoom, speed: 1.2, essential: true });
+      }
+    }
+  });
+}
+
+function updateMotorcadeRoute(currentStop) {
+  if (!mapboxMap || !mapboxMap.getSource('motorcade-route')) return;
+
+  // Determine how much of the motorcade to show
+  const stopIdx = stopOrder.indexOf(currentStop);
+  const lovefieldIdx = stopOrder.indexOf('lovefield');
+  const dealeyIdx = stopOrder.indexOf('dealey');
+
+  let coords = [];
+  if (stopIdx >= lovefieldIdx && state.visitedStops.includes('lovefield')) {
+    if (stopIdx >= dealeyIdx && state.visitedStops.includes('dealey')) {
+      // Show full route
+      coords = motorcadeRoute;
+    } else {
+      // Show partial route up to current progress
+      const progress = Math.min(3, Math.max(1, stopIdx - lovefieldIdx + 1));
+      coords = motorcadeRoute.slice(0, progress);
+    }
+  }
+
+  mapboxMap.getSource('motorcade-route').setData({
+    type: 'Feature',
+    geometry: {
+      type: 'LineString',
+      coordinates: coords
+    }
+  });
+}
+
+function updateMapboxMarkers(currentStop) {
+  // Update marker styles
+  Object.entries(mapboxMarkers).forEach(([key, { element }]) => {
+    element.classList.remove('visited', 'current');
+    if (state.visitedStops.includes(key) && key !== currentStop) {
+      element.classList.add('visited');
+    }
+    if (key === currentStop) {
+      element.classList.add('current');
+    }
+  });
+
+  // Update danger markers
+  Object.entries(dangerTriggers).forEach(([stop]) => {
+    if (state.visitedStops.includes(stop) && mapboxDangerMarkers[stop]) {
+      mapboxDangerMarkers[stop].element.classList.add('visible');
+    }
+  });
+
+  // Update motorcade route progressively
+  updateMotorcadeRoute(currentStop);
+}
 
 function updateRouteMap(currentStop, locationText, dateText) {
   if (!currentStop) return;
@@ -1113,43 +1169,37 @@ function updateRouteMap(currentStop, locationText, dateText) {
     state.visitedStops.push(currentStop);
   }
 
-  // Update city dots
-  document.querySelectorAll('.city-dot-outer').forEach(dot => {
-    const city = dot.getAttribute('data-city');
-    dot.classList.remove('visited', 'current');
-    if (state.visitedStops.includes(city) && city !== currentStop) {
-      dot.classList.add('visited');
-    }
-    if (city === currentStop) dot.classList.add('current');
-  });
-
-  // Update labels
-  document.querySelectorAll('.city-label').forEach(label => {
-    const city = label.getAttribute('data-city');
-    label.classList.remove('visited', 'current');
-    if (state.visitedStops.includes(city) && city !== currentStop) {
-      label.classList.add('visited');
-    }
-    if (city === currentStop) label.classList.add('current');
-  });
-
-  // Pulse ring
-  document.querySelectorAll('.pulse-ring').forEach(ring => ring.classList.remove('active'));
-  const currentGroup = document.querySelector(`.city-group[data-city="${currentStop}"]`);
-  if (currentGroup) {
-    currentGroup.querySelector('.pulse-ring').classList.add('active');
-  }
-
-  // Danger markers
-  Object.entries(dangerTriggers).forEach(([stop, id]) => {
-    if (state.visitedStops.includes(stop)) {
-      document.getElementById(id).classList.add('visible');
-    }
-  });
-
   // Callout
   if (locationText) document.getElementById('callout-location').textContent = locationText;
   if (dateText) document.getElementById('callout-date').textContent = dateText;
+
+  // If Mapbox isn't initialized yet, just return (markers will update on map load)
+  if (!mapboxMap) return;
+
+  // Update markers
+  updateMapboxMarkers(currentStop);
+
+  // Fly to location
+  const loc = mapLocations[currentStop];
+  if (!loc) return;
+
+  if (currentStop === 'washington') {
+    // For Washington, zoom out first then fly there
+    mapboxMap.flyTo({
+      center: [loc.lng, loc.lat],
+      zoom: 12,
+      speed: 0.6,
+      curve: 2,
+      essential: true
+    });
+  } else {
+    mapboxMap.flyTo({
+      center: [loc.lng, loc.lat],
+      zoom: 12.5,
+      speed: 0.8,
+      essential: true
+    });
+  }
 }
 
 // ============================================================
@@ -1802,6 +1852,9 @@ function startGame() {
   document.getElementById('title-screen').style.display = 'none';
   document.getElementById('map-panel').classList.add('active');
   document.getElementById('game-container').classList.add('active');
+  // Force reflow so the map container has dimensions before Mapbox init
+  document.getElementById('mapbox-container').offsetHeight;
+  initMapbox();
   renderScene('scene1');
 }
 
@@ -2028,12 +2081,27 @@ function restartGame() {
   document.getElementById('game-container').innerHTML = '';
   document.getElementById('title-screen').style.display = 'flex';
 
-  document.querySelectorAll('.city-dot-outer').forEach(d => d.classList.remove('visited', 'current'));
-  document.querySelectorAll('.city-label').forEach(l => l.classList.remove('visited', 'current'));
-  document.querySelectorAll('.pulse-ring').forEach(r => r.classList.remove('active'));
-  document.querySelectorAll('.danger-icon').forEach(d => d.classList.remove('visible'));
+  // Reset Mapbox markers
+  Object.values(mapboxMarkers).forEach(({ element }) => {
+    element.classList.remove('visited', 'current');
+  });
+  Object.values(mapboxDangerMarkers).forEach(({ element }) => {
+    element.classList.remove('visible');
+  });
+  // Reset motorcade route
+  if (mapboxMap && mapboxMap.getSource('motorcade-route')) {
+    mapboxMap.getSource('motorcade-route').setData({
+      type: 'Feature',
+      geometry: { type: 'LineString', coordinates: [] }
+    });
+  }
+  // Reset callout
   document.getElementById('callout-location').textContent = '';
   document.getElementById('callout-date').textContent = '';
+  // Reset map view to Dallas
+  if (mapboxMap) {
+    mapboxMap.flyTo({ center: [-96.81, 32.79], zoom: 11.5, speed: 1.5 });
+  }
 
   window.scrollTo({ top: 0 });
 }
