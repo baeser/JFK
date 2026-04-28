@@ -89,6 +89,63 @@
 
   .btn-start:hover { background: var(--accent-light); }
 
+  #title-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .btn-resume {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 1rem 3rem;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-resume:hover { background: #2a3a5e; }
+
+  .btn-fresh {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.6rem 1.5rem;
+    background: transparent;
+    color: #d4c8b8;
+    border: 1px solid #6b5848;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-fresh:hover {
+    color: #fff;
+    border-color: #d4c8b8;
+  }
+
+  .resume-meta {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.85rem;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+    text-align: center;
+    font-style: italic;
+  }
+
+  .resume-meta strong {
+    color: #f5f0e8;
+    font-style: normal;
+    font-weight: 600;
+  }
+
   /* ===== MAP PANEL ===== */
   #map-panel {
     position: relative;
@@ -1066,7 +1123,9 @@
     <br><br>
     The people in this story were real. The evidence is real. The questions are still being asked.
   </div>
-  <button class="btn-start" onclick="startGame()">Begin Investigation</button>
+  <div id="title-buttons">
+    <!-- Buttons populated by initTitleScreen() based on saved progress -->
+  </div>
 </div>
 
 <!-- ===== AUDIO ===== -->
@@ -1413,12 +1472,53 @@ const epilogueQuestions = [
 ];
 
 const STORAGE_KEY = 'jfk_handout_answers_v1';
+const PROGRESS_KEY = 'jfk_progress_v1';
 
 function loadAnswers() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : {};
   } catch (e) { return {}; }
+}
+
+// ---- Simulation progress (scene + choices + report) persistence ----
+function saveProgress() {
+  if (!state.currentScene) return;
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({
+      currentScene: state.currentScene,
+      decisions: state.decisions,
+      visitedStops: state.visitedStops,
+      approachChoice: state.approachChoice,
+      report: state.report,
+      reachedEpilogue: state.reachedEpilogue,
+      sceneHistory: state.sceneHistory,
+      lastSaved: Date.now()
+    }));
+  } catch (e) {}
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function clearProgress() {
+  try { localStorage.removeItem(PROGRESS_KEY); } catch (e) {}
+}
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const sec = Math.floor((Date.now() - ts) / 1000);
+  if (sec < 60) return 'just now';
+  const min = Math.floor(sec / 60);
+  if (min < 60) return min + ' minute' + (min === 1 ? '' : 's') + ' ago';
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return hr + ' hour' + (hr === 1 ? '' : 's') + ' ago';
+  const day = Math.floor(hr / 24);
+  return day + ' day' + (day === 1 ? '' : 's') + ' ago';
 }
 
 function saveAnswer(qNum, value) {
@@ -2160,6 +2260,18 @@ function fadeOutAudio(duration = 2000) {
 }
 
 function startGame() {
+  // Fresh investigation — wipe any prior progress, keep answers in case
+  // the student has been jotting things down (they can clear those separately).
+  clearProgress();
+  state.currentScene = null;
+  state.decisions = [];
+  state.visitedStops = [];
+  state.sceneHistory = [];
+  state.forwardHistory = [];
+  state.reachedEpilogue = false;
+  state.report = null;
+  state.approachChoice = null;
+
   playAudio();
   document.getElementById('title-screen').style.display = 'none';
   document.getElementById('map-panel').classList.add('active');
@@ -2170,11 +2282,81 @@ function startGame() {
   renderScene('scene1');
 }
 
+// ---- Resume from saved progress ----
+function resumeGame() {
+  const saved = loadProgress();
+  if (!saved || !saved.currentScene) {
+    startGame();
+    return;
+  }
+  // Restore state from saved progress
+  state.decisions = saved.decisions || [];
+  state.visitedStops = saved.visitedStops || [];
+  state.approachChoice = saved.approachChoice || null;
+  state.report = saved.report || null;
+  state.reachedEpilogue = !!saved.reachedEpilogue;
+  state.sceneHistory = (saved.sceneHistory && saved.sceneHistory.length) ? saved.sceneHistory.slice(0, -1) : []; // renderScene will re-push currentScene
+  state.forwardHistory = [];
+
+  // Audio: skip intro music on resume since they're mid-investigation
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('map-panel').classList.add('active');
+  document.getElementById('game-container').classList.add('active');
+  document.getElementById('mapbox-container').offsetHeight;
+  initMapbox();
+
+  // Replay visited stops on the map
+  setTimeout(() => {
+    renderScene(saved.currentScene);
+  }, 100);
+}
+
+// ---- Build the title screen buttons based on saved progress ----
+function initTitleScreen() {
+  const container = document.getElementById('title-buttons');
+  if (!container) return;
+  const saved = loadProgress();
+  const sceneTitleMap = {
+    scene1: 'The Assignment',
+    scene2: 'The Motorcade',
+    scene3: 'Dealey Plaza',
+    scene4: 'Parkland Hospital',
+    scene5: 'The Sixth Floor',
+    scene6: 'The Arrest',
+    scene7: '48 Hours',
+    scene8: 'The Investigation Widens',
+    scene9: 'The Warren Commission',
+    scene10: 'The Report',
+    epilogue: 'Epilogue'
+  };
+
+  if (saved && saved.currentScene) {
+    const sceneName = sceneTitleMap[saved.currentScene] || saved.currentScene;
+    const when = timeAgo(saved.lastSaved);
+    container.innerHTML = `
+      <div class="resume-meta">Last session: <strong>${escapeHtml(sceneName)}</strong> · saved ${escapeHtml(when)}</div>
+      <button class="btn-resume" onclick="resumeGame()">Resume Investigation</button>
+      <button class="btn-fresh" onclick="confirmFreshStart()">Start a New Investigation</button>
+    `;
+  } else {
+    container.innerHTML = `<button class="btn-start" onclick="startGame()">Begin Investigation</button>`;
+  }
+}
+
+function confirmFreshStart() {
+  if (confirm('Starting a new investigation will erase your saved progress AND all your answers from the previous session. This cannot be undone. Continue?')) {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    clearProgress();
+    startGame();
+  }
+}
+
 function renderScene(sceneId) {
   if (state.sceneHistory[state.sceneHistory.length - 1] !== sceneId) {
     state.sceneHistory.push(sceneId);
   }
   state.currentScene = sceneId;
+  saveProgress();
   const scene = scenes[sceneId];
   const container = document.getElementById('game-container');
 
@@ -2288,6 +2470,8 @@ function makeChoice(sceneId, choiceIndex) {
 
   if (choice.effect) choice.effect();
 
+  saveProgress();
+
   // Show incident report modal after scene 3 (the shooting)
   if (sceneId === 'scene3') {
     state._pendingChoice = choice;
@@ -2334,6 +2518,8 @@ function submitReport() {
     observations: document.getElementById('report-observations').value.trim(),
     immediateActions: document.getElementById('report-actions').value.trim()
   };
+
+  saveProgress();
 
   document.getElementById('report-overlay').classList.remove('active');
   document.body.style.overflow = '';
@@ -2397,6 +2583,7 @@ function confirmRestart() {
 }
 
 function restartGame() {
+  clearProgress();
   introAudio.pause();
   introAudio.currentTime = 0;
   stopEpilogueAudio();
@@ -2414,6 +2601,7 @@ function restartGame() {
   document.getElementById('game-container').classList.remove('active');
   document.getElementById('game-container').innerHTML = '';
   document.getElementById('title-screen').style.display = 'flex';
+  initTitleScreen();
 
   // Reset Mapbox markers
   Object.values(mapboxMarkers).forEach(({ element }) => {
@@ -2738,6 +2926,14 @@ ${questionsHtml}
 
   printWindow.document.close();
   setTimeout(() => { printWindow.print(); }, 700);
+}
+
+// Initialize the title screen as soon as the DOM is ready so students
+// see the Resume button right away if they have prior progress.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTitleScreen);
+} else {
+  initTitleScreen();
 }
 </script>
 
