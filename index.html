@@ -2530,7 +2530,10 @@ function submitReport() {
 
 function showBroadcastModal() {
   const iframe = document.getElementById('broadcast-iframe');
-  iframe.src = 'https://www.cbsnews.com/video/cbs-news-announces-presidents-death/';
+  // CBS's own YouTube upload of the original Cronkite announcement.
+  // The cbsnews.com /video/ page used to embed cleanly but now has
+  // cross-origin / consent-gating that breaks playback in iframes.
+  iframe.src = 'https://www.youtube.com/embed/v4q898h05HQ?rel=0&modestbranding=1';
   document.getElementById('broadcast-overlay').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -2994,7 +2997,7 @@ if (document.readyState === 'loading') {
     <div class="broadcast-dateline">November 22, 1963 — 2:38 p.m. EST</div>
     <p class="broadcast-subtitle">Walter Cronkite interrupts CBS programming to announce the death of President Kennedy. This is the broadcast that told America its president was gone.</p>
     <div class="broadcast-frame">
-      <iframe src="" id="broadcast-iframe" allowfullscreen allow="fullscreen"></iframe>
+      <iframe src="" id="broadcast-iframe" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe>
     </div>
     <button class="broadcast-close-btn" onclick="closeBroadcastModal()">Continue</button>
   </div>
