@@ -613,6 +613,129 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  /* ===== INVESTIGATOR'S NOTEBOOK (Inline Questions) ===== */
+  .field-notes {
+    margin: 2rem 0;
+    padding: 1.5rem 1.5rem 1rem;
+    background: #fdfaf0;
+    background-image:
+      linear-gradient(to bottom, transparent 31px, #d8d4c4 31px, #d8d4c4 32px, transparent 32px);
+    background-size: 100% 32px;
+    border-left: 4px solid var(--accent);
+    border-top: 1px solid #d8d4c4;
+    border-right: 1px solid #d8d4c4;
+    border-bottom: 1px solid #d8d4c4;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.08);
+    position: relative;
+  }
+
+  .field-notes::before {
+    content: "INVESTIGATOR'S FIELD NOTES";
+    display: block;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.18em;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #d8d4c4;
+  }
+
+  .field-notes-intro {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.78rem;
+    color: var(--text-light);
+    font-style: italic;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+
+  .field-notes-intro .auto-save-indicator {
+    display: inline-block;
+    margin-left: 0.5rem;
+    color: #2a7a3a;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 0.72rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .field-notes-intro .auto-save-indicator.visible { opacity: 1; }
+
+  .question-block {
+    margin-bottom: 1.25rem;
+  }
+
+  .question-block:last-child { margin-bottom: 0.5rem; }
+
+  .question-block label {
+    display: block;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+  }
+
+  .question-block label .q-num {
+    display: inline-block;
+    background: var(--blue);
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    margin-right: 0.55rem;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+    vertical-align: 1px;
+  }
+
+  .question-block label .q-num.decision {
+    background: var(--accent);
+  }
+
+  .question-block textarea {
+    width: 100%;
+    min-height: 90px;
+    padding: 0.7rem 0.9rem;
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: var(--text);
+    background: rgba(255,255,255,0.6);
+    border: 1px solid #c9c2ad;
+    resize: vertical;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .question-block textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+    background: #fff;
+  }
+
+  .question-block textarea::placeholder {
+    color: #a8a08c;
+    font-style: italic;
+  }
+
+  .meta-fields {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .meta-fields .name-field { margin-bottom: 0; }
+
+  .meta-fields .name-field input { max-width: 100%; }
+
+  @media (max-width: 700px) {
+    .meta-fields { grid-template-columns: 1fr; gap: 0.75rem; }
+  }
+
   /* ===== INCIDENT REPORT MODAL ===== */
   .report-overlay {
     display: none;
@@ -1226,6 +1349,129 @@ function updateRouteMap(currentStop, locationText, dateText) {
       essential: true
     });
   }
+}
+
+// ============================================================
+// HANDOUT QUESTIONS — Embedded inline at each scene.
+// Answers auto-save to localStorage and export to PDF at end.
+// ============================================================
+const questionsMap = {
+  scene1: [
+    { num: 1, text: "What political reasons brought President Kennedy to Texas in November 1963? Why was the trip considered necessary?" },
+    { num: 2, text: "Based on the description of Dallas in 1963, identify at least two specific warning signs that the city could be dangerous for President Kennedy." },
+    { num: 3, text: "As a Secret Service agent, you are studying the motorcade route. What security vulnerability do you notice about the route through Dealey Plaza? Why might this concern you?" }
+  ],
+  scene2: [
+    { num: 4, text: "What decision was made about the presidential limousine because of the weather clearing? Why does this matter?" },
+    { num: 5, text: 'Mrs. Connally said to the President: "You can\'t say Dallas doesn\'t love you." What is significant about this quote in the context of what happens next? What literary or historical term might describe this moment?' }
+  ],
+  scene3: [
+    { num: 6, text: "How many shots were fired and approximately how many seconds did the entire shooting take? Why does the short time frame matter for the investigation?" },
+    { num: 7, text: "Witnesses in Dealey Plaza pointed in two different directions as the source of the shots. What were these two locations? Why might eyewitnesses disagree?" },
+    { num: 8, text: "DECISION POINT: You were given a choice — rush to the Book Depository or follow the motorcade to the hospital. Which did you choose and why? What are the trade-offs of each decision?", decision: true }
+  ],
+  scene4: [
+    { num: 9, text: "A jurisdictional dispute erupted between Dallas officials and the Secret Service over the President's body. What was the dispute about, and why does this matter for the investigation?" },
+    { num: 10, text: "In 1963, assassinating a president was not a federal crime. How did this legal gap affect the investigation? What problems did it create?" }
+  ],
+  scene5: [
+    { num: 11, text: "List at least four pieces of physical evidence found on the sixth floor of the Texas School Book Depository." },
+    { num: 12, text: 'The rifle was traced to a mail-order purchase under the name "A. Hidell." What chain of evidence connected this rifle to Lee Harvey Oswald?' },
+    { num: 13, text: "DECISION POINT: You chose to focus on either the physical evidence or eyewitness interviews. What are the strengths and weaknesses of each approach in a criminal investigation?", decision: true }
+  ],
+  scene6: [
+    { num: 14, text: "Reconstruct Oswald's movements from the time of the assassination to his arrest. What does his behavior suggest about his state of mind?" },
+    { num: 15, text: "Why is the murder of Officer J.D. Tippit significant to the overall investigation of the Kennedy assassination? What does it establish?" }
+  ],
+  scene7: [
+    { num: 16, text: "Identify at least three procedural failures in how Dallas police handled Oswald's interrogation and custody. Why do these failures matter?" },
+    { num: 17, text: 'Oswald told reporters: "I\'m just a patsy." What does this claim mean? Does the evidence presented so far support or contradict it? Explain.' },
+    { num: 18, text: "Jack Ruby shot Oswald on live national television. How did Oswald's death fundamentally change the course of the investigation?" }
+  ],
+  scene8: [
+    { num: 19, text: "Oswald's biography is unusual: Marine sharpshooter, Soviet defector, return to the U.S., pro-Castro activist, Mexico City embassy visits. Choose two of these facts and explain what investigative questions each one raises." },
+    { num: 20, text: "The CIA failed to share information about Oswald's Mexico City trip with the Secret Service before the Dallas trip. Why is this intelligence failure significant? What might have happened differently if the information had been shared?" }
+  ],
+  scene9: [
+    { num: 21, text: 'Explain the single-bullet theory (also called the "magic bullet" theory). What does it claim happened, and why was it necessary for the Warren Commission\'s conclusion that Oswald acted alone?' },
+    { num: 22, text: "Commission Exhibit 399 — the bullet found on a stretcher at Parkland — was nearly intact despite allegedly causing seven wounds. Why is this significant to both supporters and critics of the Warren Commission?" },
+    { num: 23, text: "DECISION POINT: When the commission asked for your assessment, what did you say? Looking at all the evidence, do you believe the Warren Commission had enough information to reach a definitive conclusion? Why or why not?", decision: true }
+  ],
+  scene10: [
+    { num: 24, text: "List the Warren Commission's three most important conclusions. For each one, identify one piece of evidence that supports it and one question or criticism that challenges it." }
+  ]
+};
+
+// Epilogue / Final Analysis questions (rendered in epilogue UI)
+const epilogueQuestions = [
+  { num: 25, section: "Epilogue", text: 'The House Select Committee on Assassinations (1976–1979) concluded that Kennedy was "probably assassinated as a result of a conspiracy." This directly contradicts the Warren Commission. How is it possible for two official government investigations to reach opposite conclusions about the same event? What does this tell you about the investigative process?' },
+  { num: 26, section: "Epilogue", text: "The Church Committee revealed that the CIA withheld information from the Warren Commission, including its own plots to assassinate Fidel Castro. Why would the CIA hide this from the commission investigating the President's assassination? What does this suggest about the limits of government investigations?" },
+  { num: 27, section: "Final Analysis", text: "Based on ALL the evidence you encountered in this simulation, do you believe Lee Harvey Oswald acted alone? State your position clearly, then support it with at least three specific pieces of evidence from the simulation." },
+  { num: 28, section: "Final Analysis", text: "Regardless of whether you believe Oswald acted alone, identify what you consider the single most significant failure of the investigation. Explain why this failure matters and how it affected the public's trust in the official conclusion." },
+  { num: 29, section: "Final Analysis", text: 'The JFK assassination is sometimes called "the moment America lost its innocence." What do you think this phrase means? Based on what you\'ve learned about how the investigation was conducted and how government agencies behaved, do you agree with this characterization? Why or why not?' },
+  { num: 30, section: "Final Analysis", text: "If you could go back and ask ONE question to ONE person involved in this case — and be guaranteed a truthful answer — who would you ask, what would you ask, and why?" }
+];
+
+const STORAGE_KEY = 'jfk_handout_answers_v1';
+
+function loadAnswers() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+
+function saveAnswer(qNum, value) {
+  const answers = loadAnswers();
+  answers['q' + qNum] = value;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
+    showAutoSaveIndicator();
+  } catch (e) { /* localStorage full or disabled */ }
+}
+
+function saveMetaField(key, value) {
+  const answers = loadAnswers();
+  answers[key] = value;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
+    showAutoSaveIndicator();
+  } catch (e) {}
+}
+
+let _autoSaveTimer = null;
+function showAutoSaveIndicator() {
+  const indicators = document.querySelectorAll('.auto-save-indicator');
+  indicators.forEach(el => {
+    el.textContent = '✓ Saved';
+    el.classList.add('visible');
+  });
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(() => {
+    indicators.forEach(el => el.classList.remove('visible'));
+  }, 1500);
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderQuestionsBlock(sceneId) {
+  const qs = questionsMap[sceneId];
+  if (!qs || qs.length === 0) return '';
+  const answers = loadAnswers();
+  let html = `<div class="field-notes fade-in">
+    <div class="field-notes-intro">Document your findings below. Your answers save automatically as you type.<span class="auto-save-indicator"></span></div>`;
+  qs.forEach(q => {
+    const saved = escapeHtml(answers['q' + q.num] || '');
+    const decisionClass = q.decision ? ' decision' : '';
+    html += `<div class="question-block">
+      <label for="q${q.num}"><span class="q-num${decisionClass}">${q.num}</span>${escapeHtml(q.text)}</label>
+      <textarea id="q${q.num}" oninput="saveAnswer(${q.num}, this.value)" placeholder="Type your answer here...">${saved}</textarea>
+    </div>`;
+  });
+  html += `</div>`;
+  return html;
 }
 
 // ============================================================
@@ -1976,39 +2222,52 @@ function renderScene(sceneId) {
     });
     html += '</div>';
   } else if (scene.auto_next) {
+    html += renderQuestionsBlock(sceneId);
     html += `<button class="continue-btn" onclick="renderScene('${scene.auto_next}')">Continue</button>`;
   } else if (scene.isEpilogue) {
     playEpilogueAudio();
+    const a = loadAnswers();
+    const epilogueQs = epilogueQuestions.filter(q => q.section === 'Epilogue');
+    const finalQs = epilogueQuestions.filter(q => q.section === 'Final Analysis');
+    const renderEpQ = (q) => {
+      const saved = escapeHtml(a['q' + q.num] || '');
+      return `<div class="reflection-field">
+        <label><span class="q-num" style="display:inline-block;background:var(--blue);color:#fff;font-size:0.75rem;padding:2px 8px;margin-right:0.55rem;border-radius:3px;letter-spacing:0.05em;vertical-align:1px;font-family:'Source Sans Pro',sans-serif;">${q.num}</span>${escapeHtml(q.text)}</label>
+        <textarea id="q${q.num}" oninput="saveAnswer(${q.num}, this.value)" placeholder="Write your response here...">${saved}</textarea>
+      </div>`;
+    };
     html += `
     <div class="reflection-section">
       <h2>Investigation Debrief</h2>
-      <p class="reflection-intro">Answer the following questions thoughtfully and in complete sentences. When you are finished, enter your name and click "Save as PDF" to download your response for submission.</p>
+      <p class="reflection-intro">Complete the questions below, then click "Save as PDF" to download your full handout. Submit the PDF to Canvas to receive credit. Your answers (including those from earlier scenes) save automatically.<span class="auto-save-indicator"></span></p>
 
-      <div class="name-field">
-        <label for="student-name">Your Name</label>
-        <input type="text" id="student-name" placeholder="First and Last Name">
+      <div class="meta-fields">
+        <div class="name-field">
+          <label for="student-name">Name</label>
+          <input type="text" id="student-name" placeholder="First and Last Name" oninput="saveMetaField('name', this.value)" value="${escapeHtml(a.name || '')}">
+        </div>
+        <div class="name-field">
+          <label for="student-period">Period</label>
+          <input type="text" id="student-period" placeholder="e.g. 3" oninput="saveMetaField('period', this.value)" value="${escapeHtml(a.period || '')}">
+        </div>
+        <div class="name-field">
+          <label for="student-date">Date</label>
+          <input type="text" id="student-date" placeholder="MM/DD/YYYY" oninput="saveMetaField('date', this.value)" value="${escapeHtml(a.date || '')}">
+        </div>
       </div>
 
-      <div class="reflection-field">
-        <label>1. The Warren Commission concluded that Lee Harvey Oswald acted alone. The House Select Committee on Assassinations later concluded there was "probably" a conspiracy. Based on the evidence presented in this simulation, what do you think — and more importantly, what would you need to see to be more confident in your answer?</label>
-        <textarea id="reflection-1" placeholder="Write your response here..."></textarea>
-      </div>
+      <h3 style="font-size:1.1rem;color:var(--blue);margin:1.5rem 0 0.75rem;letter-spacing:0.04em;text-transform:uppercase;">Epilogue Questions</h3>
+      ${epilogueQs.map(renderEpQ).join('')}
 
-      <div class="reflection-field">
-        <label>2. Multiple government agencies — the FBI, CIA, and Secret Service — failed to share critical information with each other before the assassination. After the assassination, the CIA withheld information from the Warren Commission. Why do you think agencies within the same government would withhold information from each other? What does this tell you about how large institutions actually work?</label>
-        <textarea id="reflection-2" placeholder="Write your response here..."></textarea>
-      </div>
-
-      <div class="reflection-field">
-        <label>3. No matter what investigative choices you made in this simulation, you arrived at the Warren Commission's conclusion. What does that tell you about the difference between an individual investigator's doubts and an institution's official findings? When official conclusions and public doubt diverge, what is the responsible way for citizens to seek answers?</label>
-        <textarea id="reflection-3" placeholder="Write your response here..."></textarea>
-      </div>
+      <h3 style="font-size:1.1rem;color:var(--blue);margin:2rem 0 0.5rem;letter-spacing:0.04em;text-transform:uppercase;">Final Analysis</h3>
+      <p class="reflection-intro" style="margin-bottom:1.5rem;">Now that you have completed the full simulation, answer these synthesis questions. These require you to weigh all the evidence and think critically about what you've learned.</p>
+      ${finalQs.map(renderEpQ).join('')}
 
       <div class="reflection-actions">
         <button class="save-pdf-btn" onclick="savePDF()">Save as PDF</button>
-        <button class="restart-btn" onclick="restartGame()">Start Over</button>
+        <button class="restart-btn" onclick="confirmRestart()">Start Over</button>
       </div>
-      <p class="pdf-note">Your PDF will include your name, your responses, and the investigative choices you made during the simulation.</p>
+      <p class="pdf-note">Your PDF includes all 30 questions, your answers, and your investigative choices. Upload it to Canvas to submit.</p>
     </div>`;
   }
 
@@ -2044,6 +2303,8 @@ function applyChoice(choice) {
   const choicesEl = container.querySelector('.choices');
   if (choicesEl) {
     let consequenceHtml = `<div class="consequence fade-in">${choice.consequence}</div>`;
+    // Inject the scene's handout questions between consequence and Continue
+    consequenceHtml += renderQuestionsBlock(state.currentScene);
     consequenceHtml += `<button class="continue-btn fade-in" onclick="renderScene('${choice.next}')">Continue</button>`;
     choicesEl.outerHTML = consequenceHtml;
 
@@ -2128,6 +2389,13 @@ function closeEvidenceModal() {
   document.body.style.overflow = '';
 }
 
+function confirmRestart() {
+  if (confirm('Starting over will erase your saved answers. Continue?')) {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    restartGame();
+  }
+}
+
 function restartGame() {
   introAudio.pause();
   introAudio.currentTime = 0;
@@ -2176,49 +2444,126 @@ function restartGame() {
 // PDF GENERATION
 // ============================================================
 function savePDF() {
-  const name = document.getElementById('student-name').value.trim();
-  const r1 = document.getElementById('reflection-1').value.trim();
-  const r2 = document.getElementById('reflection-2').value.trim();
-  const r3 = document.getElementById('reflection-3').value.trim();
+  // Pull current values directly from any visible inputs (in case student
+  // hasn't blurred the field), then fall back to localStorage.
+  const a = loadAnswers();
+  const liveName   = document.getElementById('student-name');
+  const livePeriod = document.getElementById('student-period');
+  const liveDate   = document.getElementById('student-date');
+  const name   = (liveName ? liveName.value : a.name || '').trim();
+  const period = (livePeriod ? livePeriod.value : a.period || '').trim();
+  const dateInput = (liveDate ? liveDate.value : a.date || '').trim();
 
   if (!name) {
     alert('Please enter your name before saving.');
-    document.getElementById('student-name').focus();
+    if (liveName) liveName.focus();
     return;
   }
 
-  if (!r1 || !r2 || !r3) {
-    alert('Please answer all three reflection questions before saving.');
-    return;
-  }
-
-  const choiceLabels = {
-    scene1: 'Scene 1 — The Assignment',
-    scene2: 'Scene 2 — The Motorcade',
-    scene3: 'Scene 3 — Dealey Plaza',
-    scene4: 'Scene 4 — Parkland Hospital',
-    scene5: 'Scene 5 — The Sixth Floor',
-    scene7: 'Scene 7 — 48 Hours',
-    scene8: 'Scene 8 — The Investigation',
-    scene9: 'Scene 9 — Warren Commission'
-  };
-
-  let choicesHtml = '';
-  state.decisions.forEach(d => {
-    const label = choiceLabels[d.scene] || d.scene;
-    choicesHtml += `<tr><td style="padding:4px 12px 4px 0;font-weight:600;white-space:nowrap">${label}</td><td style="padding:4px 0">Choice ${d.choice}</td></tr>`;
+  // Ensure all 30 answers are pulled live (in case last keystroke wasn't saved yet)
+  const allQNums = [
+    ...Object.values(questionsMap).flat().map(q => q.num),
+    ...epilogueQuestions.map(q => q.num)
+  ];
+  const allAnswers = {};
+  allQNums.forEach(n => {
+    const el = document.getElementById('q' + n);
+    allAnswers[n] = el ? el.value : (a['q' + n] || '');
   });
 
-  if (state.approachChoice) {
-    choicesHtml += `<tr><td style="padding:4px 12px 4px 0;font-weight:600">Initial Response</td><td style="padding:4px 0">${state.approachChoice === 'depository' ? 'Went to Book Depository' : 'Went to Parkland Hospital'}</td></tr>`;
+  // Check that all 30 have been answered
+  const unanswered = allQNums.filter(n => !((allAnswers[n] || '').trim()));
+  if (unanswered.length > 0) {
+    const msg = `You still have ${unanswered.length} unanswered question${unanswered.length === 1 ? '' : 's'} (Q${unanswered.join(', Q')}).\n\nClick OK to save anyway, or Cancel to go back and complete them.`;
+    if (!confirm(msg)) return;
   }
+
+  // Scene structure for organizing PDF
+  const sceneTitles = {
+    scene1: 'Scene 1 — The Assignment',
+    scene2: 'Scene 2 — The Motorcade',
+    scene3: 'Scene 3 — 12:30 p.m. (Dealey Plaza)',
+    scene4: 'Scene 4 — Parkland Memorial Hospital',
+    scene5: 'Scene 5 — The Sixth Floor',
+    scene6: 'Scene 6 — The Arrest',
+    scene7: 'Scene 7 — 48 Hours',
+    scene8: 'Scene 8 — The Investigation Widens',
+    scene9: 'Scene 9 — The Warren Commission',
+    scene10: 'Scene 10 — The Report'
+  };
+
+  const choiceLabelMap = {};
+  state.decisions.forEach(d => { choiceLabelMap[d.scene] = d.choice; });
+
+  let choicesHtml = '';
+  Object.keys(sceneTitles).forEach(sId => {
+    if (choiceLabelMap[sId]) {
+      choicesHtml += `<tr><td>${sceneTitles[sId]}</td><td>Chose Option ${choiceLabelMap[sId]}</td></tr>`;
+    }
+  });
+
+  // Build question sections by scene
+  let questionsHtml = '';
+  Object.keys(questionsMap).forEach(sId => {
+    const qs = questionsMap[sId];
+    questionsHtml += `<h2>${sceneTitles[sId] || sId}</h2>`;
+    qs.forEach(q => {
+      const ans = (allAnswers[q.num] || '').trim() || '(no response)';
+      const dec = q.decision ? ' <span class="decision-tag">DECISION POINT</span>' : '';
+      questionsHtml += `
+        <div class="question">
+          <div class="q-label">Question ${q.num}${dec}</div>
+          <div class="q-text">${escapeHtml(q.text)}</div>
+          <div class="answer">${escapeHtml(ans)}</div>
+        </div>`;
+    });
+  });
+
+  // Epilogue section
+  questionsHtml += `<h2>Epilogue — The Questions That Remain</h2>`;
+  epilogueQuestions.filter(q => q.section === 'Epilogue').forEach(q => {
+    const ans = (allAnswers[q.num] || '').trim() || '(no response)';
+    questionsHtml += `
+      <div class="question">
+        <div class="q-label">Question ${q.num}</div>
+        <div class="q-text">${escapeHtml(q.text)}</div>
+        <div class="answer">${escapeHtml(ans)}</div>
+      </div>`;
+  });
+
+  // Final Analysis section
+  questionsHtml += `<h2>Final Analysis</h2>`;
+  epilogueQuestions.filter(q => q.section === 'Final Analysis').forEach(q => {
+    const ans = (allAnswers[q.num] || '').trim() || '(no response)';
+    questionsHtml += `
+      <div class="question">
+        <div class="q-label">Question ${q.num}</div>
+        <div class="q-text">${escapeHtml(q.text)}</div>
+        <div class="answer">${escapeHtml(ans)}</div>
+      </div>`;
+  });
+
+  // Incident report (filed during scene 3)
+  let incidentHtml = '';
+  if (state.report) {
+    incidentHtml = `
+    <h2>Preliminary Incident Report — Dealey Plaza</h2>
+    <div class="report-block">
+      <p><strong>Agent:</strong> ${escapeHtml(state.report.agentName)} &nbsp;&nbsp; <strong>Badge:</strong> ${escapeHtml(state.report.badgeNumber || 'N/A')}</p>
+      <p><strong>Shots Heard:</strong> ${escapeHtml(state.report.shotsHeard || 'N/A')} &nbsp;&nbsp; <strong>Apparent Direction:</strong> ${escapeHtml(state.report.shotsDirection || 'N/A')}</p>
+      ${state.report.observations ? `<p><strong>Observations:</strong> ${escapeHtml(state.report.observations)}</p>` : ''}
+      ${state.report.immediateActions ? `<p><strong>Immediate Actions:</strong> ${escapeHtml(state.report.immediateActions)}</p>` : ''}
+    </div>`;
+  }
+
+  const submissionDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const printWindow = window.open('', '_blank');
   printWindow.document.write(`
 <!DOCTYPE html>
 <html>
 <head>
-<title>JFK Investigation Debrief — ${name}</title>
+<title>JFK Student Handout — ${escapeHtml(name)}</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -2226,13 +2571,23 @@ function savePDF() {
     font-family: 'Source Sans Pro', Arial, sans-serif;
     color: #1a1a1a;
     padding: 0.5in 0.75in;
-    line-height: 1.6;
+    line-height: 1.55;
     font-size: 11pt;
+  }
+  .classified {
+    font-size: 9pt;
+    letter-spacing: 0.25em;
+    color: #8b0000;
+    text-align: center;
+    border: 1px solid #8b0000;
+    padding: 4px;
+    margin-bottom: 12px;
+    font-weight: 700;
   }
   .header {
     text-align: center;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
     border-bottom: 2px solid #1a2a4a;
   }
   .header h1 {
@@ -2247,82 +2602,142 @@ function savePDF() {
     color: #8b0000;
     font-weight: 600;
   }
-  .meta {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
+  .meta-table {
+    width: 100%;
+    margin-bottom: 18px;
     font-size: 10pt;
+    border-collapse: collapse;
   }
-  .meta-label { font-weight: 700; color: #1a2a4a; }
+  .meta-table td {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+  }
+  .meta-table td.label {
+    font-weight: 700;
+    color: #1a2a4a;
+    background: #f3f1ea;
+    width: 80px;
+  }
   h2 {
     font-size: 13pt;
     color: #1a2a4a;
-    margin: 20px 0 10px;
+    margin: 22px 0 10px;
     padding-bottom: 4px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #1a2a4a;
+    page-break-after: avoid;
   }
-  .question { margin-bottom: 18px; }
-  .question .q-label { font-weight: 700; font-size: 10pt; color: #1a2a4a; margin-bottom: 4px; }
-  .question .q-text { font-size: 10pt; margin-bottom: 6px; color: #444; font-style: italic; }
-  .question .answer { font-size: 11pt; line-height: 1.7; padding: 8px 0; white-space: pre-wrap; }
-  table { font-size: 10pt; border-collapse: collapse; }
+  .choices-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+    margin-bottom: 8px;
+  }
+  .choices-table td {
+    padding: 5px 10px;
+    border-bottom: 1px solid #eee;
+  }
+  .choices-table td:first-child {
+    font-weight: 700;
+    color: #1a2a4a;
+    width: 55%;
+  }
+  .question {
+    margin-bottom: 14px;
+    page-break-inside: avoid;
+  }
+  .question .q-label {
+    font-weight: 700;
+    font-size: 10pt;
+    color: #1a2a4a;
+    margin-bottom: 3px;
+  }
+  .question .q-text {
+    font-size: 10pt;
+    margin-bottom: 5px;
+    color: #444;
+    font-style: italic;
+  }
+  .question .answer {
+    font-size: 10.5pt;
+    line-height: 1.65;
+    padding: 8px 10px;
+    background: #faf8f3;
+    border-left: 3px solid #1a2a4a;
+    white-space: pre-wrap;
+  }
+  .decision-tag {
+    display: inline-block;
+    background: #8b0000;
+    color: #fff;
+    font-size: 7.5pt;
+    font-weight: 700;
+    padding: 1px 6px;
+    margin-left: 4px;
+    letter-spacing: 0.05em;
+    vertical-align: 1px;
+  }
+  .report-block {
+    font-size: 10pt;
+    line-height: 1.6;
+    padding: 12px;
+    border: 1px solid #ccc;
+    background: #faf8f3;
+    margin-bottom: 16px;
+  }
+  .report-block p { margin-bottom: 6px; }
   .footer {
-    margin-top: 30px;
-    padding-top: 12px;
+    margin-top: 28px;
+    padding-top: 10px;
     border-top: 1px solid #ddd;
     font-size: 8pt;
     color: #999;
     text-align: center;
   }
-  @media print { body { padding: 0; } }
+  @media print {
+    body { padding: 0.4in 0.6in; }
+    .question { page-break-inside: avoid; }
+    h2 { page-break-after: avoid; }
+  }
 </style>
 </head>
 <body>
+<div class="classified">CLASSIFIED — INVESTIGATIVE FILE</div>
 <div class="header">
   <h1>JFK: November 1963</h1>
-  <div class="sub">Investigation Debrief</div>
+  <div class="sub">Student Investigation Handout — Submission</div>
 </div>
-<div class="meta">
-  <div><span class="meta-label">Student:</span> ${name}</div>
-  <div><span class="meta-label">Date:</span> ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-</div>
-<h2>Investigation Choices</h2>
-<table>${choicesHtml}</table>
 
-${state.report ? `
-<h2>Preliminary Incident Report</h2>
-<div style="font-size:10pt;line-height:1.6;padding:12px;border:1px solid #ddd;background:#faf8f3;margin-bottom:16px">
-  <p><strong>Agent:</strong> ${state.report.agentName} &nbsp;&nbsp; <strong>Badge:</strong> ${state.report.badgeNumber || 'N/A'}</p>
-  <p><strong>Shots Heard:</strong> ${state.report.shotsHeard || 'N/A'} &nbsp;&nbsp; <strong>Direction:</strong> ${state.report.shotsDirection || 'N/A'}</p>
-  ${state.report.observations ? `<p><strong>Observations:</strong> ${state.report.observations}</p>` : ''}
-  ${state.report.immediateActions ? `<p><strong>Immediate Actions:</strong> ${state.report.immediateActions}</p>` : ''}
-</div>
-` : ''}
+<table class="meta-table">
+  <tr>
+    <td class="label">Name</td>
+    <td>${escapeHtml(name)}</td>
+    <td class="label">Period</td>
+    <td>${escapeHtml(period) || '—'}</td>
+  </tr>
+  <tr>
+    <td class="label">Date</td>
+    <td>${escapeHtml(dateInput) || submissionDate}</td>
+    <td class="label">Submitted</td>
+    <td>${submissionDate}</td>
+  </tr>
+</table>
 
-<h2>Reflection Questions</h2>
-<div class="question">
-  <div class="q-label">Question 1</div>
-  <div class="q-text">The Warren Commission concluded that Lee Harvey Oswald acted alone. The HSCA later concluded there was "probably" a conspiracy. Based on the evidence, what do you think — and what would you need to see to be more confident?</div>
-  <div class="answer">${r1}</div>
-</div>
-<div class="question">
-  <div class="q-label">Question 2</div>
-  <div class="q-text">Multiple government agencies failed to share critical information before and after the assassination. Why do you think agencies within the same government would withhold information from each other?</div>
-  <div class="answer">${r2}</div>
-</div>
-<div class="question">
-  <div class="q-label">Question 3</div>
-  <div class="q-text">No matter what choices you made, you arrived at the Warren Commission's conclusion. What does that tell you about official conclusions vs. public doubt?</div>
-  <div class="answer">${r3}</div>
-</div>
+${choicesHtml ? `<h2>Investigation Decisions</h2>
+<table class="choices-table">${choicesHtml}</table>` : ''}
+
+${incidentHtml}
+
+${questionsHtml}
+
 <div class="footer">
-  JFK: November 1963 — Historical Simulation for 9th Grade U.S. History
+  JFK: November 1963 — Interactive History Simulation · 9th Grade U.S. History
+  <br>Generated ${submissionDate}
 </div>
 </body>
 </html>`);
 
   printWindow.document.close();
-  setTimeout(() => { printWindow.print(); }, 600);
+  setTimeout(() => { printWindow.print(); }, 700);
 }
 </script>
 
